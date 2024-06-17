@@ -1,0 +1,100 @@
+version: '3.8'
+
+networks:
+  my_network:
+    driver: bridge
+
+services:
+  redis:
+    image: "redis:latest"
+    container_name: "redis"
+    ports:
+      - "6379:6379"
+    networks:
+      - my_network
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    restart: always
+    
+  rabbitmq:
+    image: "rabbitmq:management"
+    container_name: "rabbitmq"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - my_network
+    volumes:
+      - /rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+
+  worker1:
+    image: grupo4sdypp2024/tp4-h1-worker_requeue
+    container_name: "worker1"
+    depends_on:
+      - redis
+      - rabbitmq
+    networks:
+      - my_network
+  
+  worker2:
+    image: grupo4sdypp2024/tp4-h1-worker_requeue
+    container_name: "worker2"
+    depends_on:
+      - redis
+      - rabbitmq
+    networks:
+      - my_network
+
+  worker3:
+    image: grupo4sdypp2024/tp4-h1-worker_requeue
+    container_name: "worker3"
+    depends_on:
+      - redis
+      - rabbitmq 
+    networks:
+      - my_network
+
+  worker4:
+    image: grupo4sdypp2024/tp4-h1-worker_requeue
+    container_name: "worker4"
+    depends_on:
+      - redis
+      - rabbitmq
+    networks:
+      - my_network
+
+  particionador:
+    image: grupo4sdypp2024/tp4-h1-particionador_requeue
+    container_name: "particionador"
+    ports:
+      - "5001:5001"
+    depends_on:
+      - worker1
+      - worker2
+      - worker3
+      - worker4
+    networks:
+      - my_network
+
+  unificador:
+    image: grupo4sdypp2024/tp4-h1-unificador
+    container_name: "unificador"
+    ports:
+      - "5002:5002"
+    depends_on:
+      - particionador
+    networks:
+      - my_network
+
+  server:
+    image: grupo4sdypp2024/tp4-h1-server
+    container_name: "server"
+    ports:
+      - "5000:5000"
+    depends_on:
+      - particionador
+      - unificador
+    networks:
+      - my_network
+
