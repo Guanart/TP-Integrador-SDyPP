@@ -13,10 +13,8 @@ redis_utils = RedisUtils()
 
 app = Flask(__name__)
 prefix = "000"
-prefix_lock = threading.Lock()
 
 time_challenge_initiate: datetime = datetime.now(timezone.utc)
-time_challenge_initiate_lock = threading.Lock()
 time_challenge_terminated: datetime = datetime.now(timezone.utc)
 
 
@@ -70,15 +68,11 @@ def task_building():
                 break  # No hay más mensajes para recibir
         
         if transactions:
-            with prefix_lock:
-                current_prefix = prefix  # Leer el valor de prefix protegido por el lock
-
-            
             print(f"""
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
-PREFIJO: {current_prefix}
+PREFIJO: {prefix}
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
@@ -89,24 +83,21 @@ PREFIJO: {current_prefix}
             task = {
                 "id": last_id,
                 "transactions": transactions, 
-                "prefix": current_prefix,
+                "prefix": prefix,
                 "random_num_max": 99999999,
                 "last_hash": last_element["hash"] if last_element else ""
             }
             # Guardo en Redis el prefijo requerido para este bloque:
-            redis_utils.post_task(last_id, current_prefix)
+            redis_utils.post_task(last_id, prefix)
             
             # Encolar en RabbitMQ en el topic
             channel.basic_publish(exchange='blockchain_challenge', routing_key='blocks', body=json.dumps(task))
             print(f"Encolando tarea para los workers: {task}")
-            with time_challenge_initiate_lock:
-                time_challenge_initiate = datetime.now(timezone.utc)
+            time_challenge_initiate = datetime.now(timezone.utc)
         else:
             print(f"No hay transacciones por el momento.")
         
         time.sleep(30)  # Cambiar a 60
-
-
 
 @app.route("/solved_task", methods=["POST"])
 def solved_task():
@@ -169,11 +160,11 @@ def solved_task():
         time_challenge_terminated = datetime.now(timezone.utc)#.isoformat()
         time_difference = (time_challenge_terminated - time_challenge_initiate).total_seconds()
 
-        with prefix_lock:
-            if time_difference > 300:
-                prefix -= "0"
-            elif time_difference < 240:
-                prefix += "0"
+        if time_difference > 300 and len(prefix) > 1:
+            prefix = prefix[:-1]  # Quitar un "0"
+        elif time_difference < 240:
+            prefix += "0"
+
         print(f"""
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
@@ -223,11 +214,9 @@ if __name__ == "__main__":
             connected_rabbit = True
             print("Conectado a RabbitMQ!")
         except Exception as e:
-            print(f"Error connectando a RabbitMQ: {e}")
+            print(f"Error al conectar con RabbitMQ: {e}")
             print("Reintentando en 3 segundos...")
             time.sleep(3)
 
-    thread = threading.Thread(target=task_building, daemon=True)
-    # thread.daemon = True  # Permitir que el hilo se cierre cuando el programa principal termine
-    thread.start()
-    app.run(debug=True, port=5000, host="0.0.0.0")
+    threading.Thread(target=task_building).start()
+    app.run(host="0.0.0.0", port=5000)

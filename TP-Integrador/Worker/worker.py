@@ -33,11 +33,14 @@ def on_message_received(ch, method, properties, body):
 
     encontrado = False
     start_time = time.time()
-    
+    # max_number = int(data['random_num_max'])
+    # number = 0
     print("Starting mining process...")
+    # while not encontrado and number < max_number:
     while not encontrado:
         number = str(random.randint(0, int(data['random_num_max'])))
         hash_calculado = calcular_hash(number + str(data['transactions']) + data['last_hash'])
+        # number += 1
         '''
         El coordinador valida así (no usa hashlib.sha256()):
         combined_data = f"{number}{transactions}{current_hash}"
