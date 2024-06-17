@@ -2,7 +2,7 @@ import redis
 import json
 
 class RedisUtils:
-    def __init__(self, host='localhost', port=6379, db=0, password='eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81'):
+    def __init__(self, host='redis', port=6379, db=0, password='redis_images'):
         """Initialize Redis connection with security."""
         self.redis_client = redis.StrictRedis(host=host, port=port, db=db, password=password)
 

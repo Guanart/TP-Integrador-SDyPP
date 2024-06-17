@@ -45,7 +45,6 @@ def transaction():
             return jsonify({'error': 'Faltan uno o más campos necesarios.'}), 400
 
         print(f"Transacción recibida: {data}")
-
         # Encolar en RabbitMQ!
         channel.basic_publish(exchange='', routing_key='transactions', body=json.dumps(data))
         return jsonify({'message': 'Transacción recibida y encolada en RabbitMQ.', "data": data}), 200
