@@ -1,16 +1,17 @@
 services:
   redis:
-    image: "redis:latest"
+    image: "redis/redis-stack:latest"
     container_name: "redis"
     ports:
       - "6379:6379"
+      - "8001:8001"
     networks:
       - my_network
     volumes:
       - redis_data:/data
     command: ["redis-server", "--appendonly", "yes", "--requirepass", "redis_blocks"]
     restart: always
-    
+
   rabbitmq:
     image: "rabbitmq:management"
     container_name: "rabbitmq"
@@ -20,18 +21,20 @@ services:
     networks:
       - my_network
     volumes:
-      - ./Services/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - /Services/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
 
   coordinator:
     image: grupo4sdypp2024/tp-integrador-coordinator
     container_name: "coordinator"
     ports:
-      - "5001:5001"
+      - "5000:5000"
     depends_on:
       - rabbitmq
       - redis
     networks:
       - my_network
+    environment:
+      - PYTHONUNBUFFERED=1
 
   worker-1:
     image: grupo4sdypp2024/tp-integrador-worker
@@ -42,7 +45,9 @@ services:
       - redis
     networks:
       - my_network
-  
+    environment:
+      - PYTHONUNBUFFERED=1
+
   worker-2:
     image: grupo4sdypp2024/tp-integrador-worker
     container_name: "worker-2"
@@ -52,7 +57,12 @@ services:
       - redis
     networks:
       - my_network
+    environment:
+      - PYTHONUNBUFFERED=1
 
 networks:
   my_network:
     driver: bridge
+
+volumes:
+  redis_data:

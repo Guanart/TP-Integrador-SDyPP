@@ -1,6 +1,2 @@
 pika
-json
-hashlib
-random
 requests
-time

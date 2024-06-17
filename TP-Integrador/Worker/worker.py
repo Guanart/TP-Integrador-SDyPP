@@ -5,13 +5,13 @@ import random
 import requests
 import time
 
-def calcular_sha256(texto):
-    hash_sha256 = hashlib.sha256()
-    hash_sha256.update(texto.encode('utf-8'))
-    return hash_sha256.hexdigest()
+def calcular_hash(texto):
+    hash = hashlib.md5()
+    hash.update(texto.encode('utf-8'))
+    return hash.hexdigest()
 
 def post_result(data):
-    url = "http://coordinator/solved_task"
+    url = "http://coordinator:5000/solved_task"
     try:
         response = requests.post(url, json=data)
         print("Post response:", response.text)
@@ -26,6 +26,7 @@ def on_message_received(ch, method, properties, body):
         "id": last_id,
         "transactions": transactions, 
         "prefix": prefix,
+        "random_num_max": 99999999,
         "last_hash": last_element["hash"] if last_element else ""
     }
     '''
@@ -35,8 +36,8 @@ def on_message_received(ch, method, properties, body):
     
     print("Starting mining process...")
     while not encontrado:
-        number = str(random.randint(0, data['random_num_max']))
-        hash_calculado = calcular_sha256(number + data['transactions'] + data['last_hash'])
+        number = str(random.randint(0, int(data['random_num_max'])))
+        hash_calculado = calcular_hash(number + str(data['transactions']) + data['last_hash'])
         '''
         El coordinador valida así (no usa hashlib.sha256()):
         combined_data = f"{number}{transactions}{current_hash}"
@@ -57,15 +58,21 @@ def main():
     # Configuración de RabbitMQ
     rabbitmq_host = 'rabbitmq'
     rabbitmq_port = 5672
-
-    connection = pika.BlockingConnection(
-        pika.ConnectionParameters(host=rabbitmq_host, port=rabbitmq_port, credentials=pika.PlainCredentials('rabbitmq', 'rabbitmq'))
-    )
-    channel = connection.channel()
-    channel.exchange_declare(exchange='blockchain_challenge', exchange_type='topic', durable=True)
-    result = channel.queue_declare('', exclusive=True)
-    queue_name = result.method.queue
-    channel.queue_bind(exchange='blockchain_challenge', queue=queue_name, routing_key='blocks')
+    connected_rabbit = False
+    while not connected_rabbit:
+        try:
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host, port=rabbitmq_port, credentials=pika.PlainCredentials('guest', 'guest')))
+            channel = connection.channel()
+            channel.exchange_declare(exchange='blockchain_challenge', exchange_type='topic', durable=True)
+            result = channel.queue_declare('', exclusive=True)
+            queue_name = result.method.queue
+            channel.queue_bind(exchange='blockchain_challenge', queue=queue_name, routing_key='blocks')
+            connected_rabbit = True
+        except Exception as e:
+            print(f"Error connectando a RabbitMQ: {e}")
+            print("Reintentando en 3 segundos...")
+            time.sleep(3)
+    
     channel.basic_consume(queue=queue_name, on_message_callback=on_message_received, auto_ack=False)
     print('Waiting for messages. To exit press CTRL+C')
     try:
