@@ -23,10 +23,6 @@ def calcular_hash(data):
     hash.update(data.encode('utf-8'))
     return hash.hexdigest()
 
-@app.route('/')
-def index():
-    return f"Coordinador funcionando!"
-
 @app.route('/transaction', methods=['POST'])
 def transaction():
     try:
@@ -81,7 +77,7 @@ def task_building():
             redis_utils.post_task(last_id, prefix)
             
             # Encolar en RabbitMQ en el topic
-            channel.basic_publish(exchange='blockchain_challenge', routing_key='blocks', body=json.dumps(task))
+            channel.basic_publish(exchange='blockchain_challenge', routing_key='tasks', body=json.dumps(task))
             print(f"Encolando tarea para los workers: {task}")
             time_challenge_initiate = datetime.now(timezone.utc)
         else:
