@@ -68,16 +68,6 @@ def task_building():
                 break  # No hay más mensajes para recibir
         
         if transactions:
-            print(f"""
----------------------------------------------------------------------
----------------------------------------------------------------------
----------------------------------------------------------------------
-PREFIJO: {prefix}
----------------------------------------------------------------------
----------------------------------------------------------------------
----------------------------------------------------------------------
-""")
-
             last_element = redis_utils.get_latest_element() # Obtener último bloque de la blockchain
             last_id = last_element["id"] + 1 if last_element else 0
             task = {
@@ -110,7 +100,7 @@ def solved_task():
         if not data:
             return jsonify({'error': 'No se proporcionaron datos.'}), 400
         
-        print("Worker data: ",data)
+        print("Worker data: ", data)
 
         required_fields = ['id', 'number', 'transactions', 'hash']
         if not all(field in data for field in required_fields):
@@ -154,10 +144,11 @@ def solved_task():
             "previous_hash": current_hash
         }
 
+        # Guardo el bloque en Redis
         redis_utils.post_message(message=block)
 
         # Calculo el prefijo para el próximo bloque
-        time_challenge_terminated = datetime.now(timezone.utc)#.isoformat()
+        time_challenge_terminated = datetime.now(timezone.utc)
         time_difference = (time_challenge_terminated - time_challenge_initiate).total_seconds()
 
         if time_difference > 300 and len(prefix) > 1:
@@ -169,15 +160,15 @@ def solved_task():
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
-TIEMPO dif: {time_difference}
+DIFERENCIA DE TIEMPO: {time_difference}
 TIME CHALLENGE INITIATE: {time_challenge_initiate}
 TIME CHALLENGE TERMINTATED: {time_challenge_terminated}
-PREFIJO: {prefix}
+NUEVO PREFIJO: {prefix}
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
 """)
-        return jsonify({"message": "Transaccion procesada.", "data": block}), 200
+        return jsonify({"message": "Bloque añadido a la Blockchain.", "data": block}), 200
     except Exception as e:
         return jsonify({"error": e}), 500
 

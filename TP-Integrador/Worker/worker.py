@@ -33,12 +33,10 @@ def on_message_received(ch, method, properties, body):
 
     encontrado = False
     start_time = time.time()
-    # max_number = int(data['random_num_max'])
-    # number = 0
     print("Starting mining process...")
-    # while not encontrado and number < max_number:
-    while not encontrado:
-        number = str(random.randint(0, int(data['random_num_max'])))
+    count = 0
+    while not encontrado and count<=data["random_num_max"]:
+        number = str(count)
         hash_calculado = calcular_hash(number + str(data['transactions']) + data['last_hash'])
         # number += 1
         '''
@@ -46,16 +44,21 @@ def on_message_received(ch, method, properties, body):
         combined_data = f"{number}{transactions}{current_hash}"
         hash_calculado = calcular_hash(combined_data)
         '''
-
         if hash_calculado.startswith(data['prefix']):
             encontrado = True
             processing_time = time.time() - start_time
             data["processing_time"] = processing_time
             data["hash"] = hash_calculado
             data["number"] = number
-            post_result(data)
-    ch.basic_ack(delivery_tag=method.delivery_tag)
-    print(f"Result found and posted for block ID {data['id']} in {processing_time:.2f} seconds")
+        count+=1
+
+    if encontrado:
+        post_result(data)
+        print(f"Resultado encontrado y posteado para el block con ID {data['id']} en {processing_time:.2f} segundos")
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+    else:
+        print(f"No se encontró un Hash con ese máximo de números")
+
 
 def main():
     # Configuración de RabbitMQ
@@ -64,7 +67,7 @@ def main():
     connected_rabbit = False
     while not connected_rabbit:
         try:
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host, port=rabbitmq_port, credentials=pika.PlainCredentials('guest', 'guest')))
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host, port=rabbitmq_port, credentials=pika.PlainCredentials('guest', 'guest'), heartbeat=0))
             channel = connection.channel()
             channel.exchange_declare(exchange='blockchain_challenge', exchange_type='topic', durable=True)
             result = channel.queue_declare('', exclusive=True)
