@@ -27,7 +27,7 @@ def ejecutar_minero(from_val, to_val, prefix, hash_val):
     while (rep <= repeticiones and not(encontrado)):
         print("ciclos:", rep, "comienzo:", desde)
 
-        execute_command = ['./md5', str(desde), str(to_val), prefix, hash_val]
+        execute_command = ['./md5', str(desde), str(desde + 512 * 150 - 1), prefix, hash_val]
 
         start_time = time.time()
         execute_process = subprocess.run(execute_command, capture_output=True, text=True)
@@ -62,8 +62,4 @@ def ejecutar_minero(from_val, to_val, prefix, hash_val):
     return contenido
 
 # Ejemplo de uso
-#ejecutar_minero(1, 1000000, "0000000", "at22")
-
-import subprocess
-import json
-import time
+# ejecutar_minero(1, 9000000, "0", "")

@@ -70,7 +70,7 @@ def task_building():
                 "id": last_id,
                 "transactions": transactions, 
                 "prefix": prefix,
-                "random_num_max": 99999999,
+                "num_max": 99999999,
                 "last_hash": last_element["hash"] if last_element else ""
             }
             # Guardo en Redis el prefijo requerido para este bloque:
@@ -121,7 +121,7 @@ def solved_task():
         else:
             current_hash = ""
 
-        combined_data = f"{number}{transactions}{current_hash}"
+        combined_data = f"{number}{len(transactions)}{current_hash}"
         hash_calculado = calcular_hash(combined_data)
 
         print(f"Hash recibido: {received_hash}")
@@ -147,9 +147,9 @@ def solved_task():
         time_challenge_terminated = datetime.now(timezone.utc)
         time_difference = (time_challenge_terminated - time_challenge_initiate).total_seconds()
 
-        if time_difference > 300 and len(prefix) > 1:
+        if time_difference > 75 and len(prefix) > 1:
             prefix = prefix[:-1]  # Quitar un "0"
-        elif time_difference < 240:
+        elif time_difference < 30:
             prefix += "0"
 
         print(f"""

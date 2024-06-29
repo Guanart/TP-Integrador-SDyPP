@@ -1,7 +1,6 @@
 import pika
 import json
 import hashlib
-import random
 import requests
 import time
 
@@ -26,7 +25,7 @@ def on_message_received(ch, method, properties, body):
         "id": last_id,
         "transactions": transactions, 
         "prefix": prefix,
-        "random_num_max": 99999999,
+        "num_max": 99999999,
         "last_hash": last_element["hash"] if last_element else ""
     }
     '''
@@ -35,9 +34,9 @@ def on_message_received(ch, method, properties, body):
     start_time = time.time()
     print("Starting mining process...")
     count = 0
-    while not encontrado and count<=data["random_num_max"]:
+    while not encontrado and count<=data["num_max"]:
         number = str(count)
-        hash_calculado = calcular_hash(number + str(data['transactions']) + data['last_hash'])
+        hash_calculado = calcular_hash(number + str(len(data['transactions'])) + data['last_hash'])
         # number += 1
         '''
         El coordinador valida así (no usa hashlib.sha256()):
@@ -47,7 +46,6 @@ def on_message_received(ch, method, properties, body):
         if hash_calculado.startswith(data['prefix']):
             encontrado = True
             processing_time = time.time() - start_time
-            data["processing_time"] = processing_time
             data["hash"] = hash_calculado
             data["number"] = number
         count+=1
@@ -58,6 +56,7 @@ def on_message_received(ch, method, properties, body):
         ch.basic_ack(delivery_tag=method.delivery_tag)
     else:
         print(f"No se encontró un Hash con ese máximo de números")
+        #ch.basic_nack(delivery_tag=method.delivery_tag)
 
 
 def main():
@@ -74,6 +73,7 @@ def main():
             queue_name = result.method.queue
             channel.queue_bind(exchange='blockchain_challenge', queue=queue_name, routing_key='tasks')
             connected_rabbit = True
+            print("Ya se encuentra conectado a RabbitMQ!")
         except Exception as e:
             print(f"Error connectando a RabbitMQ: {e}")
             print("Reintentando en 3 segundos...")
