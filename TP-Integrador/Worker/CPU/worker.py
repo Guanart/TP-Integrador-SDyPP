@@ -3,6 +3,10 @@ import json
 import hashlib
 import requests
 import time
+import threading
+import random
+
+id = random.randint(0,1000000)
 
 def calcular_hash(texto):
     hash = hashlib.md5()
@@ -58,8 +62,44 @@ def on_message_received(ch, method, properties, body):
         print(f"No se encontró un Hash con ese máximo de números")
         #ch.basic_nack(delivery_tag=method.delivery_tag)
 
+def send_ack():
+    global id
+    url = "http://keep_alive_server:5000/alive"
+    data = {
+        "id": id,
+        "type": "cpu"
+    }
+    while True:
+        try:
+            response = requests.post(url, json=data)
+            print("Post response:", response.text)
+        except requests.exceptions.RequestException as e:
+            print("Failed to send POST request:", e)
 
 def main():
+    global id
+    data = {
+        "id": id,
+        "type": "cpu"
+    }
+    url = "http://keep_alive_server:5000/register"
+    registered_coordinator = False
+    while not registered_coordinator:
+        try:
+            response = requests.post()
+            if response.status_codes == 200:
+                print("Connected to Keep Alive Server")
+                print(response.text)
+                registered_coordinator = True
+            else:
+                print("Error to connect to keep alive server")
+                print(response.status_codes + response.text)
+                time.sleep(3)
+        except requests.exceptions.RequestException as e:
+            print("Failed to send POST request:", e)
+    # Iniciar el hilo que imprime "Hola" cada 4.5 segundos
+    threading.Thread(target=send_ack, daemon=True).start()
+
     # Configuración de RabbitMQ
     rabbitmq_host = 'rabbitmq'
     rabbitmq_port = 5672

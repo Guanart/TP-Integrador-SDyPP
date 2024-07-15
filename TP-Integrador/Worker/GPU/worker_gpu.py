@@ -3,6 +3,10 @@ import requests
 import minero_gpu
 import json
 import time
+import threading
+import random
+
+id = random.randint(0,1000000)
 
 #Enviar el resultado al coordinador para verificar que el resultado es correcto
 def post_result(data):
@@ -43,8 +47,46 @@ def minero(ch, method, properties, body):
     print(f"Resultado encontrado y posteado para el block con ID {data['id']} en {processing_time:.2f} segundos")
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
+def send_ack():
+    global id
+    url = "http://keep_alive_server:5000/alive"
+    data = {
+        "id": id,
+        "type": "gpu"
+    }
+    while True:
+        try:
+            response = requests.post(url, json=data)
+            print("Post response:", response.text)
+        except requests.exceptions.RequestException as e:
+            print("Failed to send POST request:", e)
+
 #Conexion con rabbit al topico y comienza a ser consumidor
 def main():
+    global id
+    data = {
+        "id": id,
+        "type": "gpu"
+    }
+    url = "http://keep_alive_server:5000/register"
+    registered_coordinator = False
+    while not registered_coordinator:
+        try:
+            response = requests.post()
+            if response.status_codes == 200:
+                print("Connected to Keep Alive Server")
+                print(response.text)
+                registered_coordinator = True
+            else:
+                print("Error to connect to keep alive server")
+                print(response.status_codes + response.text)
+                time.sleep(3)
+        except requests.exceptions.RequestException as e:
+            print("Failed to send POST request:", e)
+    
+    # Iniciar el hilo que imprime "Hola" cada 4.5 segundos
+    threading.Thread(target=send_ack, daemon=True).start()
+
     # Configuración de RabbitMQ
     rabbitmq_host = 'localhost'
     rabbitmq_port = 5672
