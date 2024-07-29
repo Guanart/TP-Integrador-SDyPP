@@ -6,7 +6,14 @@ import time
 import threading
 import random
 
+# Cambiar
 id = random.randint(0,1000000)
+"""
+QUE EL KEEP ALIVE GENERE EL ID Y SE LO PASE AL WORKER
+Entonces lo primero que hace cuando le llega un ALIVE es fijarse si tiene id,
+sino tiene, le da uno, y el worker se lo pone.
+"""
+
 
 #Enviar el resultado al coordinador para verificar que el resultado es correcto
 def post_result(data):
@@ -20,7 +27,7 @@ def post_result(data):
 # #Minero: Encargado de realizar el desafio
 def minero(ch, method, properties, body):
     data = json.loads(body)
-    print(f"Message {data} received")
+    print(f"Message received")
     start_time = time.time()
     print("Starting mining process...")
 
@@ -38,28 +45,35 @@ def minero(ch, method, properties, body):
     resultado = minero_gpu.ejecutar_minero(1, data["num_max"], data["prefix"], str(len(data['transactions'])) + data["last_hash"])
     processing_time = time.time() - start_time
     resultado = json.loads(resultado)
-    print(f"Resultado: {resultado}")
+    #print(f"Resultado: {resultado}")
 
     data["hash"] = resultado['hash_md5_result']
     data["number"] = resultado["numero"]
 
-    post_result(data)
-    print(f"Resultado encontrado y posteado para el block con ID {data['id']} en {processing_time:.2f} segundos")
-    ch.basic_ack(delivery_tag=method.delivery_tag)
+    if (resultado):
+        post_result(data)
+        print(f"Resultado encontrado y posteado para el block con ID {data['id']} en {processing_time:.2f} segundos")
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+    else :
+        print(f"No se encontró un Hash con ese máximo de números")
+        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)  # Le indico que no pude, y que no reencole
 
-def send_ack():
+def send_keep_alive():
     global id
-    url = "http://keep_alive_server:5000/alive"
+    #url = "http://keep-alive-server:5001/alive"
+    url = "http://localhost:5001/alive"
     data = {
         "id": id,
         "type": "gpu"
     }
     while True:
         try:
+            print("Enviando keep-alive...")
             response = requests.post(url, json=data)
-            print("Post response:", response.text)
+            print("Respuesta del keep-alive-server:", response.text)
+            time.sleep(7)
         except requests.exceptions.RequestException as e:
-            print("Failed to send POST request:", e)
+            print("Falló al hacer POST al keep-alive-server:", e)
 
 #Conexion con rabbit al topico y comienza a ser consumidor
 def main():
@@ -68,25 +82,24 @@ def main():
         "id": id,
         "type": "gpu"
     }
-    url = "http://keep_alive_server:5000/register"
+    #url = "http://keep-alive-server:5001/alive"
+    url = "http://localhost:5001/alive"
     registered_coordinator = False
     while not registered_coordinator:
         try:
-            response = requests.post()
-            if response.status_codes == 200:
+            response = requests.post(url, json=data)
+            if response.status_code == 200:
                 print("Connected to Keep Alive Server")
                 print(response.text)
                 registered_coordinator = True
             else:
                 print("Error to connect to keep alive server")
-                print(response.status_codes + response.text)
+                print(response.status_code + response.text)
                 time.sleep(3)
         except requests.exceptions.RequestException as e:
             print("Failed to send POST request:", e)
+    threading.Thread(target=send_keep_alive, daemon=True).start()
     
-    # Iniciar el hilo que imprime "Hola" cada 4.5 segundos
-    threading.Thread(target=send_ack, daemon=True).start()
-
     # Configuración de RabbitMQ
     rabbitmq_host = 'localhost'
     rabbitmq_port = 5672

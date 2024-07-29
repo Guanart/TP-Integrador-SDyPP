@@ -6,6 +6,7 @@ import time
 import threading
 import random
 
+# Cambiar
 id = random.randint(0,1000000)
 
 def calcular_hash(texto):
@@ -23,7 +24,7 @@ def post_result(data):
 
 def on_message_received(ch, method, properties, body):
     data = json.loads(body)
-    print(f"Message {data} received")
+    print(f"Message received")
     '''
     data = {
         "id": last_id,
@@ -60,21 +61,26 @@ def on_message_received(ch, method, properties, body):
         ch.basic_ack(delivery_tag=method.delivery_tag)
     else:
         print(f"No se encontró un Hash con ese máximo de números")
-        #ch.basic_nack(delivery_tag=method.delivery_tag)
+        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)  # Le indico que no pude, y que no reencole
 
-def send_ack():
+
+
+
+def send_keep_alive():
     global id
-    url = "http://keep_alive_server:5000/alive"
+    url = "http://keep-alive-server:5001/alive"
     data = {
         "id": id,
         "type": "cpu"
     }
     while True:
         try:
+            print("Enviando keep-alive...")
             response = requests.post(url, json=data)
-            print("Post response:", response.text)
+            print("Respuesta del keep-alive-server:", response.text)
+            time.sleep(7)
         except requests.exceptions.RequestException as e:
-            print("Failed to send POST request:", e)
+            print("Falló al hacer POST al keep-alive-server:", e)
 
 def main():
     global id
@@ -82,23 +88,23 @@ def main():
         "id": id,
         "type": "cpu"
     }
-    url = "http://keep_alive_server:5000/register"
+    url = "http://keep-alive-server:5001/alive"
     registered_coordinator = False
     while not registered_coordinator:
         try:
-            response = requests.post()
-            if response.status_codes == 200:
+            response = requests.post(url, json=data)
+            if response.status_code == 200:
                 print("Connected to Keep Alive Server")
                 print(response.text)
                 registered_coordinator = True
             else:
                 print("Error to connect to keep alive server")
-                print(response.status_codes + response.text)
+                print(response.status_code + response.text)
                 time.sleep(3)
         except requests.exceptions.RequestException as e:
             print("Failed to send POST request:", e)
-    # Iniciar el hilo que imprime "Hola" cada 4.5 segundos
-    threading.Thread(target=send_ack, daemon=True).start()
+    threading.Thread(target=send_keep_alive, daemon=True).start()
+    
 
     # Configuración de RabbitMQ
     rabbitmq_host = 'rabbitmq'

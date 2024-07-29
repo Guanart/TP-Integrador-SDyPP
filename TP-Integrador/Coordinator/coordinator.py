@@ -7,12 +7,16 @@ import time
 import redis
 import sys
 import hashlib
+import random
 from redis_utils import RedisUtils
 
 redis_utils = RedisUtils()
 
 app = Flask(__name__)
 prefix = "000"
+last_task = None
+last_id = 0
+redis_blocked = False
 
 time_challenge_initiate: datetime = datetime.now(timezone.utc)
 time_challenge_terminated: datetime = datetime.now(timezone.utc)
@@ -45,44 +49,69 @@ def transaction():
 def status():
     return jsonify({'message': 'running'}), 200
 
+def postear_task(last_element):
+    global last_id
+    global last_task
+    global time_challenge_initiate
+
+    transactions = []
+    while True:
+        method_frame, header_frame, body = channel.basic_get(queue='transactions', auto_ack=False)
+        if method_frame:
+            # Agregar la transacción al array de transacciones
+            transactions.append(json.loads(body))
+            # ACK del mensaje recibido
+            channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+        else:
+            break  # No hay más mensajes para recibir
+        
+    if transactions:
+        task = {
+            "id": last_id,
+            "transactions": transactions, 
+            "prefix": prefix,
+            "num_max": 99999999,
+            "last_hash": last_element["hash"] if last_element else ""
+        }
+        # Guardo en Redis el la tarea:
+        redis_utils.post_task(last_id, task)      
+        last_task = task
+        
+        # Encolar en RabbitMQ en el topic
+        channel.basic_publish(exchange='blockchain_challenge', routing_key='tasks', body=json.dumps(task))
+        print(f"Encolando tarea para los workers: {task}")
+        time_challenge_initiate = datetime.now(timezone.utc)
+    else:
+        print(f"No hay transacciones por el momento.")
+
 def task_building():
     global prefix
     global time_challenge_initiate
     global redis_utils
-    
+    global previous_task
+    global last_task
+    global last_id
+
     while True:
         print("Buscando nuevas transacciones para generar task...")
-        transactions = []
-        while True:
-            method_frame, header_frame, body = channel.basic_get(queue='transactions', auto_ack=False)
-            if method_frame:
-                # Agregar la transacción al array de transacciones
-                transactions.append(json.loads(body))
-                # ACK del mensaje recibido
-                channel.basic_ack(delivery_tag=method_frame.delivery_tag)
-            else:
-                break  # No hay más mensajes para recibir
-        
-        if transactions:
-            last_element = redis_utils.get_latest_element() # Obtener último bloque de la blockchain
-            last_id = last_element["id"] + 1 if last_element else 0
-            task = {
-                "id": last_id,
-                "transactions": transactions, 
-                "prefix": prefix,
-                "num_max": 99999999,
-                "last_hash": last_element["hash"] if last_element else ""
-            }
-            # Guardo en Redis el prefijo requerido para este bloque:
-            redis_utils.post_task(last_id, prefix)
-            
-            # Encolar en RabbitMQ en el topic
-            channel.basic_publish(exchange='blockchain_challenge', routing_key='tasks', body=json.dumps(task))
-            print(f"Encolando tarea para los workers: {task}")
-            time_challenge_initiate = datetime.now(timezone.utc)
-        else:
-            print(f"No hay transacciones por el momento.")
-        
+
+        last_element = redis_utils.get_latest_element() # Obtener último bloque de la blockchain
+        last_id = last_element["id"] + 1 if last_element else 0
+
+        if last_task != None and last_task['id'] == last_id:
+            # Obtengo la diferencia de tiempo
+            time_challenge_terminated = datetime.now(timezone.utc)
+            time_difference = (time_challenge_terminated - time_challenge_initiate).total_seconds()
+
+            if time_difference >= 600 and len(prefix) > 1:
+                prefix = prefix[:-1]  # Quitar un "0"
+                print(f"Ningún worker resolvió la tarea en 10 minutos, disminuyendo dificultad: {prefix}")
+                postear_task(last_element)
+
+            time.sleep(30)
+            continue
+
+        postear_task(last_element)                
         time.sleep(30)  # Cambiar a 60
 
 @app.route("/solved_task", methods=["POST"])
@@ -91,12 +120,14 @@ def solved_task():
     global time_challenge_initiate
     global time_challenge_terminated
     global redis_utils
+    global redis_blocked
     try:
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No se proporcionaron datos.'}), 400
         
         print("Worker data: ", data)
+        print()
 
         required_fields = ['id', 'number', 'transactions', 'hash']
         if not all(field in data for field in required_fields):
@@ -107,11 +138,13 @@ def solved_task():
         transactions = data.get("transactions")
         received_hash = data.get("hash")
 
+        # Evita colisiones
+        #time.sleep(random.random())
         if redis_utils.exists_id(block_id):
             return jsonify({'error': 'El bloque ya existe.'}), 400
 
         # Comparo el prefijo
-        prefijo = redis_utils.get_task(block_id)
+        prefijo = redis_utils.get_task(block_id)["prefix"]
         if not received_hash.startswith(prefijo):
             return jsonify({'error': 'El hash no tiene el prefijo requerido.'}), 400
 
@@ -141,6 +174,9 @@ def solved_task():
         }
 
         # Guardo el bloque en Redis
+        if redis_utils.exists_id(block_id):
+            return jsonify({'error': 'El bloque ya existe.'}), 400
+        
         redis_utils.post_message(message=block)
 
         # Calculo el prefijo para el próximo bloque
@@ -149,21 +185,13 @@ def solved_task():
 
         if time_difference > 75 and len(prefix) > 1:
             prefix = prefix[:-1]  # Quitar un "0"
+            print(f"NUEVO PREFIJO: {prefix}")
         elif time_difference < 30:
             prefix += "0"
+            print(f"NUEVO PREFIJO: {prefix}")
 
-        print(f"""
----------------------------------------------------------------------
----------------------------------------------------------------------
----------------------------------------------------------------------
-DIFERENCIA DE TIEMPO: {time_difference}
-TIME CHALLENGE INITIATE: {time_challenge_initiate}
-TIME CHALLENGE TERMINTATED: {time_challenge_terminated}
-NUEVO PREFIJO: {prefix}
----------------------------------------------------------------------
----------------------------------------------------------------------
----------------------------------------------------------------------
-""")
+        redis_utils.delete_task(block_id)
+
         return jsonify({"message": "Bloque añadido a la Blockchain.", "data": block}), 200
     except Exception as e:
         return jsonify({"error": e}), 500
@@ -192,7 +220,7 @@ if __name__ == "__main__":
     connected_rabbit = False
     while not connected_rabbit:
         try:
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host, port=rabbitmq_port))
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host, port=rabbitmq_port, heartbeat=0))
             channel = connection.channel()
             # Crear cola
             channel.queue_declare(queue=rabbitmq_queue, durable=True)

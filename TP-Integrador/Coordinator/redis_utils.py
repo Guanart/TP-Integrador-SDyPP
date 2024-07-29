@@ -33,10 +33,14 @@ class RedisUtils:
         return False
 
     def post_task(self, clave, valor):
-        return self.redis_client.set(clave, valor)
+        valor_json = json.dumps(valor)
+        return self.redis_client.set(clave, valor_json)
 
     def get_task(self, clave):
-        """Retrieve the task from Redis.""" 
-        return self.redis_client.get(clave)
+        valor_json = self.redis_client.get(clave)
+        return json.loads(valor_json)
+
+    def delete_task(self, clave):
+        return self.redis_client.delete(clave)
 
 # The module can be used after import by creating an instance of RedisUtils

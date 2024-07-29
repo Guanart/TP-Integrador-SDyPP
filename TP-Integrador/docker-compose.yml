@@ -34,6 +34,18 @@ services:
       - my_network
     environment:
       - PYTHONUNBUFFERED=1
+  
+  keep-alive-server:
+    image: grupo4sdypp2024/tp-integrador-keep-alive-server
+    container_name: "keep-alive-server"
+    ports:
+      - "5001:5001"
+    depends_on:
+      - coordinator
+    networks:
+      - my_network
+    environment:
+      - PYTHONUNBUFFERED=1
 
   worker-1:
     image: grupo4sdypp2024/tp-integrador-worker
