@@ -36,7 +36,7 @@ def receive_keep_alive():
                 worker["last_keep_alive"]= datetime.now(timezone.utc)
                 break
         
-        return(message), 200
+        return jsonify(message), 200
     except Exception as e:
         return jsonify(e)
 

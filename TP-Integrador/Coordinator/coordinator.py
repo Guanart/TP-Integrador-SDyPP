@@ -70,6 +70,7 @@ def postear_task(last_element):
             "id": last_id,
             "transactions": transactions, 
             "prefix": prefix,
+            "num_min": 0,
             "num_max": 99999999,
             "last_hash": last_element["hash"] if last_element else ""
         }
@@ -103,7 +104,7 @@ def task_building():
             time_challenge_terminated = datetime.now(timezone.utc)
             time_difference = (time_challenge_terminated - time_challenge_initiate).total_seconds()
 
-            if time_difference >= 600 and len(prefix) > 1:
+            if time_difference >= 300 and len(prefix) > 1:
                 prefix = prefix[:-1]  # Quitar un "0"
                 print(f"Ningún worker resolvió la tarea en 10 minutos, disminuyendo dificultad: {prefix}")
                 postear_task(last_element)

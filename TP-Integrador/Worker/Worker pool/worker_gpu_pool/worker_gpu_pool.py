@@ -17,7 +17,7 @@ sino tiene, le da uno, y el worker se lo pone.
 
 #Enviar el resultado al coordinador para verificar que el resultado es correcto
 def post_result(data):
-    url = "http://localhost:5000/solved_task"
+    url = "http://localhost:5002/solved_task"
     try:
         response = requests.post(url, json=data)
         print("Post response:", response.text)
@@ -46,13 +46,11 @@ def minero(ch, method, properties, body):
     
     resultado = minero_gpu.ejecutar_minero(data["num_min"], data["num_max"], data["prefix"], str(len(data['transactions'])) + data["last_hash"])
     processing_time = time.time() - start_time
-    resultado = json.loads(resultado)
     #print(f"Resultado: {resultado}")
-
-    data["hash"] = resultado['hash_md5_result']
-    data["number"] = resultado["numero"]
-
     if (resultado):
+        resultado = json.loads(resultado)
+        data["hash"] = resultado['hash_md5_result']
+        data["number"] = resultado["numero"]
         post_result(data)
         print(f"Resultado encontrado y posteado para el block con ID {data['id']} en {processing_time:.2f} segundos")
         ch.basic_ack(delivery_tag=method.delivery_tag)
@@ -62,8 +60,7 @@ def minero(ch, method, properties, body):
 
 def send_keep_alive():
     global id
-    #url = "http://keep-alive-server:5001/alive"
-    url = "http://localhost:5001/alive"
+    url = "http://localhost:5002/alive"
     data = {
         "id": id,
         "type": "gpu"
@@ -84,8 +81,7 @@ def main():
         "id": id,
         "type": "gpu"
     }
-    #url = "http://keep-alive-server:5001/alive"
-    url = "http://localhost:5001/alive"
+    url = "http://localhost:5002/alive"
     registered_coordinator = False
     while not registered_coordinator:
         try:
@@ -104,7 +100,7 @@ def main():
     
     # Configuración de RabbitMQ
     rabbitmq_host = 'localhost'
-    rabbitmq_port = 5672
+    rabbitmq_port = 5673
     connected_rabbit = False
     while not connected_rabbit:
         try:
@@ -113,8 +109,7 @@ def main():
             channel.exchange_declare(exchange='blockchain_challenge', exchange_type='topic', durable=True)
             result = channel.queue_declare('', exclusive=True)
             queue_name = result.method.queue
-            # Si se conecta a un worker pool, entonces routing_key es su ID !!!!!!
-            channel.queue_bind(exchange='blockchain_challenge', queue=queue_name, routing_key='tasks')
+            channel.queue_bind(exchange='blockchain_challenge', queue=queue_name, routing_key=f'{id}')
             connected_rabbit = True
             print("Ya se encuentra conectado a RabbitMQ!")
         except Exception as e:
