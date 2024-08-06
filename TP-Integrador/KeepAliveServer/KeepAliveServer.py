@@ -3,9 +3,13 @@ import threading
 from flask import Flask, request, jsonify
 import json
 import time
+import uuid
 
 app = Flask(__name__)
 workers_alive=[]
+
+def generate_id():
+    return uuid.uuid4()
 
 @app.route('/alive', methods=["POST"])
 def receive_keep_alive():
@@ -17,17 +21,21 @@ def receive_keep_alive():
 
         required_fields = ["id", "type"]
         if not all(field in data for field in required_fields):
-            return jsonify({"error": "Worker id no proporcionado"}), 400
+            return jsonify({"error": "Worker id o tipo no proporcionado"}), 400
         
-        if all(worker_registered["id"] != data["id"] for worker_registered in workers_alive):
+        if data["id"] == -1:
+            id = str(generate_id())
             workers_alive.append({
-                "id": data["id"],
+                "id": id,
                 "type": data["type"],
                 'last_keep_alive': datetime.now(timezone.utc),
                 'missed_keep_alives': 0
             })
-
-            message = {"message": "Worker registrado correctamente."}
+            message = {"message": "Worker registrado correctamente.", "id": id}
+        elif (data["id"] != -1) and all(worker_registered["id"] != data["id"] for worker_registered in workers_alive):
+            print(data["id"])
+            print(workers_alive)
+            return jsonify({"error": "Worker id no registrado"}), 400
         else:
             message = {"message": "Mensaje keep_alive recibido correctamente"}
         

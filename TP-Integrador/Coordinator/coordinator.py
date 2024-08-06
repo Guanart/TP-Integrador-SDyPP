@@ -81,9 +81,11 @@ def postear_task(last_element):
         # Encolar en RabbitMQ en el topic
         channel.basic_publish(exchange='blockchain_challenge', routing_key='tasks', body=json.dumps(task))
         print(f"Encolando tarea para los workers: {task}")
+        print()
         time_challenge_initiate = datetime.now(timezone.utc)
     else:
         print(f"No hay transacciones por el momento.")
+        print()
 
 def task_building():
     global prefix
@@ -94,7 +96,8 @@ def task_building():
     global last_id
 
     while True:
-        print("Buscando nuevas transacciones para generar task...")
+        print("Comprobando si hay transacciones para generar task...")
+        print()
 
         last_element = redis_utils.get_latest_element() # Obtener último bloque de la blockchain
         last_id = last_element["id"] + 1 if last_element else 0
@@ -107,6 +110,7 @@ def task_building():
             if time_difference >= 300 and len(prefix) > 1:
                 prefix = prefix[:-1]  # Quitar un "0"
                 print(f"Ningún worker resolvió la tarea en 10 minutos, disminuyendo dificultad: {prefix}")
+                print()
                 postear_task(last_element)
 
             time.sleep(30)
@@ -127,7 +131,7 @@ def solved_task():
         if not data:
             return jsonify({'error': 'No se proporcionaron datos.'}), 400
         
-        print("Worker data: ", data)
+        print(f"Un Worker envió su solución:\n{data}")
         print()
 
         required_fields = ['id', 'number', 'transactions', 'hash']
@@ -160,6 +164,7 @@ def solved_task():
 
         print(f"Hash recibido: {received_hash}")
         print(f"Hash calculado localmente: {hash_calculado}")
+        print()
 
         if received_hash != hash_calculado:
             return jsonify({'error': 'Hash invalido. Descartado.'}), 400
@@ -187,9 +192,11 @@ def solved_task():
         if time_difference > 75 and len(prefix) > 1:
             prefix = prefix[:-1]  # Quitar un "0"
             print(f"NUEVO PREFIJO: {prefix}")
+            print()
         elif time_difference < 30:
             prefix += "0"
             print(f"NUEVO PREFIJO: {prefix}")
+            print()
 
         redis_utils.delete_task(block_id)
 
@@ -214,6 +221,7 @@ if __name__ == "__main__":
             redis_client = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_db, decode_responses=True)
             connected_redis = True
             print("Conectado a Redis")
+            print()
         except Exception as e:
             print(f"No se pudo conectar a Redis: {e}")
             print("Reintentando en 3 segundos...")
@@ -229,6 +237,7 @@ if __name__ == "__main__":
             channel.exchange_declare(exchange=rabbitmq_exchange, exchange_type='topic', durable=True)
             connected_rabbit = True
             print("Conectado a RabbitMQ!")
+            print()
         except Exception as e:
             print(f"Error al conectar con RabbitMQ: {e}")
             print("Reintentando en 3 segundos...")

@@ -6,6 +6,7 @@ from flask import Flask, request, jsonify
 import threading
 import pika
 import requests
+import uuid
 
 app = Flask(__name__)
 
@@ -17,7 +18,8 @@ workers_conectados = []
 resuelto = False
 
 
-
+def generate_id():
+    return uuid.uuid4()
 
 @app.route('/alive', methods=["POST"])
 def receive_keep_alive():
@@ -30,13 +32,17 @@ def receive_keep_alive():
         if "id" not in data:
             return jsonify({"error": "Worker id no proporcionado"}), 400
         
-        if all(worker_registered["id"] != data["id"] for worker_registered in workers_conectados):
+        if data["id"] == -1:
+            id = generate_id()
             workers_conectados.append({
-                "id": data["id"],
+                "id": id,
+                "type": data["type"],
                 'last_keep_alive': datetime.now(timezone.utc),
                 'missed_keep_alives': 0
             })
-            message = {"message": "Worker registrado correctamente."}
+            message = {"message": "Worker registrado correctamente.", "id": id}
+        elif (data["id"] != -1) and all(worker_registered["id"] != data["id"] for worker_registered in workers_conectados):
+            return jsonify({"error": "Worker id no registrado"}), 400
         else:
             message = {"message": "Mensaje keep_alive recibido correctamente"}
         
@@ -209,7 +215,6 @@ if __name__ == "__main__":
 
     # CONECTARSE A RABBIT DE BLOCKCHAIN Y EMPEZAR A CONSUMIR:
     threading.Thread(target=main).start()
-    #main()
 
     # COMENZAR A FUNCIONAR COMO SERVER KEEP ALIVE PARA LOS WORKERS QUE SE CONECTEN:
     threading.Thread(target=workers_with_live).start()

@@ -6,8 +6,7 @@ import time
 import threading
 import random
 
-# Cambiar
-id = random.randint(0,1000000)
+id = -1
 
 def calcular_hash(texto):
     hash = hashlib.md5()
@@ -97,6 +96,7 @@ def main():
                 print("Connected to Keep Alive Server")
                 print(response.text)
                 registered_coordinator = True
+                id = response.json()["id"]
             else:
                 print("Error to connect to keep alive server")
                 print(response.status_code + response.text)

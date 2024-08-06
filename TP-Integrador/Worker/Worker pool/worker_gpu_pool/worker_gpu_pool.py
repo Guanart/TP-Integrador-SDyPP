@@ -6,14 +6,7 @@ import time
 import threading
 import random
 
-# Cambiar
-id = random.randint(0,1000000)
-"""
-QUE EL KEEP ALIVE GENERE EL ID Y SE LO PASE AL WORKER
-Entonces lo primero que hace cuando le llega un ALIVE es fijarse si tiene id,
-sino tiene, le da uno, y el worker se lo pone.
-"""
-
+id = -1
 
 #Enviar el resultado al coordinador para verificar que el resultado es correcto
 def post_result(data):
@@ -90,6 +83,7 @@ def main():
                 print("Connected to Keep Alive Server")
                 print(response.text)
                 registered_coordinator = True
+                id = response.json()["id"]
             else:
                 print("Error to connect to keep alive server")
                 print(response.status_code + response.text)
