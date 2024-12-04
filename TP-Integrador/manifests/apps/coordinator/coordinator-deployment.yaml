@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coordinator
+  namespace: apps
+  labels:
+    app: coordinator
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: coordinator
+  template:
+    metadata:
+      labels:
+        app: coordinator
+    spec:
+      containers:
+        - name: coordinator
+          image: grupo4sdypp2024/tp-integrador-coordinator:1.0.0
+          ports:
+            - containerPort: 8080
+          # livenessProbe:
+          #   httpGet:
+          #     path: /health
+          #     port: 8080
+          #   initialDelaySeconds: 30
+          #   periodSeconds: 10
+          # readinessProbe:
+          #   httpGet:
+          #     path: /health
+          #     port: 8080
+          #   initialDelaySeconds: 5
+          #   periodSeconds: 10

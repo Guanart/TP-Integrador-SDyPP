@@ -1,0 +1,24 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: rabbitmq-ha
+  namespace: services
+spec:
+  replicas: 3
+  persistence:
+    storageClassName: standard
+    storage: 1Gi
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 250m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+  rabbitmq:
+    additionalConfig: |
+      cluster_partition_handling = pause_minority
+      queue_master_locator = min-masters
+      disk_free_limit.absolute = 2GB
+  service:
+    type: ClusterIP

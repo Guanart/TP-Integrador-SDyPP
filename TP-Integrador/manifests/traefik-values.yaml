@@ -1,0 +1,47 @@
+providers:
+  kubernetesCRD: {}
+  kubernetesIngress: {}
+
+entryPoints:
+  coordinator:
+    address: ":5000"  # Traefik escucha el tráfico externo en el puerto 5000
+  keepalive:
+    address: ":5001"  # Traefik escucha el tráfico externo en el puerto 5001
+  rabbitmq:
+    address: ":5672"  # Traefik escucha el tráfico externo en el puerto 5672
+
+tcp:
+  routers:
+    coordinator-router:
+      entryPoints:
+        - coordinator
+      service: coordinator-service
+      rule: "HostSNI(*)"  # Acepta cualquier tráfico en el puerto 5000
+    keepalive-router:
+      entryPoints:
+        - keepalive
+      service: keepalive-service
+      rule: "HostSNI(*)"  # Acepta cualquier tráfico en el puerto 5001
+    rabbitmq-router:
+      rule: "HostSNI(`*`)"
+      service: rabbitmq-service
+      entryPoints:
+        - rabbitmq
+
+  services:
+    keepalive-service:
+      loadBalancer:
+        servers:
+          - address: "keepalive.apps.svc.cluster.local:8080"  # Dirección interna del servicio KeepAlive
+    coordinator-service:
+      loadBalancer:
+        servers:
+          - address: "coordinator.apps.svc.cluster.local:8081"  # Dirección interna del servicio Coordinator
+    rabbitmq-service:
+      loadBalancer:
+        servers:
+          - address: "rabbitmq.default.svc.cluster.local:5672"  # Dirección interna del servicio RabbitMQ
+            
+ingressClass:
+  enabled: true
+  isDefaultClass: true
