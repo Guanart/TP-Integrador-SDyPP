@@ -29,14 +29,14 @@ tcp:
         - rabbitmq
 
   services:
-    keepalive-service:
-      loadBalancer:
-        servers:
-          - address: "keepalive.apps.svc.cluster.local:8080"  # Dirección interna del servicio KeepAlive
     coordinator-service:
       loadBalancer:
         servers:
-          - address: "coordinator.apps.svc.cluster.local:8081"  # Dirección interna del servicio Coordinator
+          - address: "coordinator.apps.svc.cluster.local:5000"  # Dirección interna del servicio Coordinator
+    keepalive-service:
+      loadBalancer:
+        servers:
+          - address: "keepalive.apps.svc.cluster.local:5001"  # Dirección interna del servicio KeepAlive
     rabbitmq-service:
       loadBalancer:
         servers:

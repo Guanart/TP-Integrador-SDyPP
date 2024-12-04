@@ -19,16 +19,16 @@ spec:
         - name: keepalive
           image: tp-integrador-keepalive:1.0.0
           ports:
-            - containerPort: 8080
+            - containerPort: 5001
           # livenessProbe:
           #   httpGet:
           #     path: /health
-          #     port: 8080
+          #     port: 5001
           #   initialDelaySeconds: 30
           #   periodSeconds: 10
           # readinessProbe:
           #   httpGet:
           #     path: /ready
-          #     port: 8080
+          #     port: 5001
           #   initialDelaySeconds: 5
           #   periodSeconds: 10

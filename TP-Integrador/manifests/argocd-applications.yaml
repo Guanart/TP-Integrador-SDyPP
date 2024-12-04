@@ -6,12 +6,12 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/tu-repo/TP-Integrador.git
+    repoURL: https://github.com/Guanart/SDyPP-2024-grupo-4.git
     targetRevision: HEAD
-    path: Services/redis
+    path: TP-Integrador/manifests/services/redis
   destination:
     server: https://kubernetes.default.svc
-    namespace: default
+    namespace: services
   syncPolicy:
     automated:
       prune: true
@@ -25,12 +25,12 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/tu-repo/TP-Integrador.git
+    repoURL: https://github.com/Guanart/SDyPP-2024-grupo-4.git
     targetRevision: HEAD
-    path: Services/rabbitmq
+    path: TP-Integrador/manifests/services/rabbitmq
   destination:
     server: https://kubernetes.default.svc
-    namespace: default
+    namespace: services
   syncPolicy:
     automated:
       prune: true
@@ -44,12 +44,12 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/tu-repo/TP-Integrador.git
+    repoURL: https://github.com/Guanart/SDyPP-2024-grupo-4.git
     targetRevision: HEAD
-    path: apps/coordinator
+    path: TP-Integrador/manifests/apps/coordinator
   destination:
     server: https://kubernetes.default.svc
-    namespace: default
+    namespace: apps
   syncPolicy:
     automated:
       prune: true
@@ -63,12 +63,12 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/tu-repo/TP-Integrador.git
+    repoURL: https://github.com/Guanart/SDyPP-2024-grupo-4.git
     targetRevision: HEAD
-    path: apps/keepalive
+    path: TP-Integrador/manifests/apps/keepalive
   destination:
     server: https://kubernetes.default.svc
-    namespace: default
+    namespace: apps
   syncPolicy:
     automated:
       prune: true
