@@ -1,6 +1,9 @@
 # https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/google_service_account
 resource "google_service_account" "kubernetes" {
   account_id = "kubernetes"
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_node_pool
