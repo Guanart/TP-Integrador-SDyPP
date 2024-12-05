@@ -55,7 +55,6 @@ resource "google_container_node_pool" "spot" {
   node_config {
     preemptible  = true
     machine_type = "e2-highcpu-4"
-    service_account = google_service_account.kubernetes.email
 
     labels = {
       team = "devops"
