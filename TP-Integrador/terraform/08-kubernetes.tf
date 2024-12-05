@@ -11,10 +11,8 @@ resource "google_container_cluster" "primary" {
   networking_mode          = "VPC_NATIVE"
 
   deletion_protection = false
-  /* # Optional, if you want multi-zonal cluster
-  node_locations = [
-    "us-central1-b"
-  ] */
+  # Optional, if you want multi-zonal cluster
+  # node_locations = ["us-east1-b", "us-east1-c", "us-east1-d"]
 
   addons_config {
     http_load_balancing {
