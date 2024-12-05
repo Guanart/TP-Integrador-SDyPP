@@ -1,6 +1,9 @@
 # https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/google_service_account
 resource "google_service_account" "kubernetes" {
   account_id = "kubernetes"
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
 }
 
 # https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_node_pool
@@ -16,12 +19,13 @@ resource "google_container_node_pool" "general" {
 
   autoscaling {
     min_node_count = 1
-    max_node_count = 10
+    max_node_count = 2
   }
 
   node_config {
     preemptible  = false
-    machine_type = "e2-standard-8"
+    machine_type = "e2-small"
+    disk_size_gb = 10  # Tamaño del disco en GB
 
     labels = {
       role = "general"
@@ -46,12 +50,13 @@ resource "google_container_node_pool" "spot" {
 
   autoscaling {
     min_node_count = 1
-    max_node_count = 10
+    max_node_count = 2
   }
 
   node_config {
     preemptible  = true
     machine_type = "e2-small"
+    disk_size_gb = 10  # Tamaño del disco en GB
 
     labels = {
       team = "devops"

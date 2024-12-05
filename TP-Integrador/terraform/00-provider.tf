@@ -8,7 +8,7 @@ terraform {
   }
 
   backend "gcs" {
-    # bucket  = "sdypp-2024-integrador-bucket-tfstate"
+    # bucket  = "integrador-sdypp-bucket-tfstate"
     # prefix  = "terraform/state"
   }
 
