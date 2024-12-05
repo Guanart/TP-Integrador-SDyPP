@@ -22,6 +22,11 @@ resource "google_container_node_pool" "general" {
     max_node_count = 2
   }
 
+  lifecycle {
+    ignore_changes = [
+      node_count
+    ]
+  }
   node_config {
     preemptible  = false
     machine_type = "e2-small"
