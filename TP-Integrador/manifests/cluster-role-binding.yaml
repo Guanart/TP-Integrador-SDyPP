@@ -4,7 +4,7 @@ metadata:
   name: gcp-service-account-admin-binding
 subjects:
   - kind: User
-    name: service-account@integrador-sdypp.iam.gserviceaccount.com
+    name: 1010286629787-compute@developer.gserviceaccount.com
     apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: ClusterRole
