@@ -4,7 +4,6 @@ import hashlib
 import requests
 import time
 import threading
-import random
 
 id = -1
 
@@ -23,7 +22,7 @@ def post_result(data):
 
 def on_message_received(ch, method, properties, body):
     data = json.loads(body)
-    print(f"Message received")
+    print(f"Tarea recibida")
     '''
     data = {
         "id": last_id,
@@ -33,7 +32,6 @@ def on_message_received(ch, method, properties, body):
         "last_hash": last_element["hash"] if last_element else ""
     }
     '''
-
     encontrado = False
     start_time = time.time()
     print("Starting mining process...")
@@ -41,12 +39,6 @@ def on_message_received(ch, method, properties, body):
     while not encontrado and count<=data["num_max"]:
         number = str(count)
         hash_calculado = calcular_hash(number + str(len(data['transactions'])) + data['last_hash'])
-        # number += 1
-        '''
-        El coordinador valida así (no usa hashlib.sha256()):
-        combined_data = f"{number}{transactions}{current_hash}"
-        hash_calculado = calcular_hash(combined_data)
-        '''
         if hash_calculado.startswith(data['prefix']):
             encontrado = True
             processing_time = time.time() - start_time
@@ -62,9 +54,6 @@ def on_message_received(ch, method, properties, body):
         print(f"No se encontró un Hash con ese máximo de números")
         ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)  # Le indico que no pude, y que no reencole
 
-
-
-
 def send_keep_alive():
     global id
     url = "http://keep-alive-server:5001/alive"
@@ -79,7 +68,7 @@ def send_keep_alive():
             print("Respuesta del keep-alive-server:", response.text)
             time.sleep(7)
         except requests.exceptions.RequestException as e:
-            print("Falló al hacer POST al keep-alive-server:", e)
+            print("Fallo al hacer POST al keep-alive-server:", e)
 
 def main():
     global id
@@ -126,7 +115,7 @@ def main():
             time.sleep(3)
     
     channel.basic_consume(queue=queue_name, on_message_callback=on_message_received, auto_ack=False)
-    print('Waiting for messages. To exit press CTRL+C')
+    print('Worker listo para consumir. Esperando tasks...')
     try:
         channel.start_consuming()
     except KeyboardInterrupt:

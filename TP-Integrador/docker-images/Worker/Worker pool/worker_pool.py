@@ -11,9 +11,7 @@ import uuid
 app = Flask(__name__)
 
 # Cambiar
-id = random.randint(0,1000000)
-ch_rabbit = None
-method_rabbit = None
+id = -1
 workers_conectados = []
 resuelto = False
 
@@ -21,6 +19,7 @@ resuelto = False
 def generate_id():
     return uuid.uuid4()
 
+# Funcionamos como keep-alive-server para mantener registro de cuantos workers conectados tenemos
 @app.route('/alive', methods=["POST"])
 def receive_keep_alive():
     global workers_conectados
@@ -33,14 +32,14 @@ def receive_keep_alive():
             return jsonify({"error": "Worker id no proporcionado"}), 400
         
         if data["id"] == -1:
-            id = generate_id()
+            id_generado = str(generate_id())
             workers_conectados.append({
-                "id": id,
+                "id": id_generado,
                 "type": data["type"],
                 'last_keep_alive': datetime.now(timezone.utc),
                 'missed_keep_alives': 0
             })
-            message = {"message": "Worker registrado correctamente.", "id": id}
+            message = {"message": "Worker registrado correctamente.", "id": id_generado}
         elif (data["id"] != -1) and all(worker_registered["id"] != data["id"] for worker_registered in workers_conectados):
             return jsonify({"error": "Worker id no registrado"}), 400
         else:
@@ -73,39 +72,39 @@ def workers_with_live():
                 remove_worker_by_id(worker["id"])
         time.sleep(10)
 
+# Función al consumir una tarea:
 def divisor_task(ch, method, properties, body):
     global workers_conectados
-    global ch_rabbit 
-    global method_rabbit
     global resuelto
 
-    ch.basic_ack(delivery_tag=method.delivery_tag)
-    ch_rabbit = ch
-    method_rabbit = method
     resuelto = False
     data = json.loads(body)
-    print(f"Message received")
+    print(f"Tarea recibida")
 
+    if (len(workers_conectados) == 0):
+        print("Todavía no hay workers conectados al pool, tarea descartada")
+        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+    else:
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+        print("Dividiendo la tarea...")
+        
+        num_max = data["num_max"]
+        num_workers = len(workers_conectados)
+        range_size = num_max // num_workers
+        # Calcular el sobrante que no se divide exactamente
+        remainder = num_max % num_workers
+        start = data["num_min"]
+        
 
-    start_time = time.time()
-    print("Dividiendo la tarea...")
-    
-    num_max = data["num_max"]
-    num_workers = len(workers_conectados)
-    range_size = num_max // num_workers
-    # Calcular el sobrante que no se divide exactamente
-    remainder = num_max % num_workers
-    start = data["num_min"]
-    
+        for i in range(len(workers_conectados)):
+            worker = workers_conectados[i]
+            end = start + range_size + (remainder if i == len(workers_conectados)-1 else 0)
+            data["num_min"] = start
+            data["num_max"] = end
+            channel.basic_publish(exchange='blockchain_challenge', routing_key=f'{worker["id"]}', body=json.dumps(data))
+            start = end + 1
 
-    for i in range(len(workers_conectados)):
-        worker = workers_conectados[i]
-        end = start + range_size + (remainder if i == len(workers_conectados)-1 else 0)
-        data["num_min"] = start
-        data["num_max"] = end
-        channel.basic_publish(exchange='blockchain_challenge', routing_key=f'{worker["id"]}', body=json.dumps(data))
-        start = end + 1
-
+# Cuando un worker responde, mandamos su solución al coordinador
 def post_result(data):
     url = "http://coordinator:5000/solved_task"
     try:
@@ -114,10 +113,9 @@ def post_result(data):
     except requests.exceptions.RequestException as e:
         print("Failed to send POST request:", e)
 
+# Los workers que se conectan al pool mandan la tarea resuelta a este, no al coordinador
 @app.route('/solved_task', methods=["POST"])
 def resend_result():
-    global method_rabbit
-    global ch_rabbit
     global resuelto
 
     if not resuelto:
@@ -127,6 +125,7 @@ def resend_result():
         return jsonify({"message": "Bloque enviado a la Blockchain.", "data": data}), 200
     return jsonify({"error": "Tarea ya resuelta"}), 400
 
+# Función igual a la de los workers para mandar keep-alive al server (ya que se trata como un worker único)
 def send_keep_alive():
     global id
     url = "http://keep-alive-server:5001/alive"
@@ -142,6 +141,31 @@ def send_keep_alive():
             time.sleep(7)
         except requests.exceptions.RequestException as e:
             print("Falló al hacer POST al keep-alive-server:", e)
+
+def connect_keep_alive_server():
+    global id
+    data = {
+        "id": id,
+        "type": "gpu"
+    }
+    url = "http://keep-alive-server:5001/alive"
+    registered_coordinator = False
+    while not registered_coordinator:
+        try:
+            response = requests.post(url, json=data)
+            if response.status_code == 200:
+                print("Connected to Keep Alive Server")
+                print(response.text)
+                registered_coordinator = True
+                id = response.json()["id"]
+            else:
+                print("Error to connect to keep alive server")
+                print(response.status_code + response.text)
+                time.sleep(3)
+        except requests.exceptions.RequestException as e:
+            print("Failed to send POST request:", e)
+    threading.Thread(target=send_keep_alive, daemon=True).start()
+
 
 def main():
     # Configuración de RabbitMQ
@@ -173,7 +197,7 @@ def main():
         print("Connection closed.")
 
 if __name__ == "__main__": 
-    # CONECTARSE AL RABBIT MQ DONDE SE PUBLICAN LAS TASKS PARA LOS WORKERS:
+    # CONECTARSE AL RABBIT MQ DONDE SE PUBLICAN LAS TASKS PARA LOS WORKERS (rabbit del pool de workers):
     rabbitmq_host = 'rabbitmq-worker-pool'
     rabbitmq_port = 5673
     rabbitmq_exchange = 'blockchain_challenge'
@@ -192,26 +216,7 @@ if __name__ == "__main__":
             time.sleep(3)
 
     # CONECTARSE AL KEEP ALIVE SERVER DE LA BLOCKCHAIN:
-    data = {
-        "id": id,
-        "type": "gpu"
-    }
-    url = "http://keep-alive-server:5001/alive"
-    registered_coordinator = False
-    while not registered_coordinator:
-        try:
-            response = requests.post(url, json=data)
-            if response.status_code == 200:
-                print("Connected to Keep Alive Server")
-                print(response.text)
-                registered_coordinator = True
-            else:
-                print("Error to connect to keep alive server")
-                print(response.status_code + response.text)
-                time.sleep(3)
-        except requests.exceptions.RequestException as e:
-            print("Failed to send POST request:", e)
-    threading.Thread(target=send_keep_alive, daemon=True).start()
+    connect_keep_alive_server()
 
     # CONECTARSE A RABBIT DE BLOCKCHAIN Y EMPEZAR A CONSUMIR:
     threading.Thread(target=main).start()

@@ -1,15 +1,12 @@
 import pika
-import requests
-import minero_gpu
 import json
+import minero_gpu
+import requests
 import time
 import threading
-import random
 
 id = -1
 
-
-#Enviar el resultado al coordinador para verificar que el resultado es correcto
 def post_result(data):
     url = "http://localhost:5000/solved_task"
     try:
@@ -21,11 +18,9 @@ def post_result(data):
 # #Minero: Encargado de realizar el desafio
 def minero(ch, method, properties, body):
     data = json.loads(body)
-    print(f"Message received")
+    print(f"Tarea recibida")
     start_time = time.time()
     print("Starting mining process...")
-
-    # En nuestra versión llega esto en data:
     '''
     data = {
         "id": last_id,
@@ -37,11 +32,9 @@ def minero(ch, method, properties, body):
     }
     '''
 
-    
     resultado = minero_gpu.ejecutar_minero(data["num_min"], data["num_max"], data["prefix"], str(len(data['transactions'])) + data["last_hash"])
     processing_time = time.time() - start_time
     resultado = json.loads(resultado)
-    #print(f"Resultado: {resultado}")
 
     data["hash"] = resultado['hash_md5_result']
     data["number"] = resultado["numero"]
@@ -50,7 +43,7 @@ def minero(ch, method, properties, body):
         post_result(data)
         print(f"Resultado encontrado y posteado para el block con ID {data['id']} en {processing_time:.2f} segundos")
         ch.basic_ack(delivery_tag=method.delivery_tag)
-    else :
+    else:
         print(f"No se encontró un Hash con ese máximo de números")
         ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)  # Le indico que no pude, y que no reencole
 

@@ -62,10 +62,10 @@ def send_keep_alive():
         try:
             print("Enviando keep-alive...")
             response = requests.post(url, json=data)
-            print("Respuesta del keep-alive-server:", response.text)
+            print("Respuesta del worker-pool:", response.text)
             time.sleep(7)
         except requests.exceptions.RequestException as e:
-            print("Falló al hacer POST al keep-alive-server:", e)
+            print("Falló al hacer POST al worker-pool:", e)
 
 #Conexion con rabbit al topico y comienza a ser consumidor
 def main():
@@ -80,12 +80,12 @@ def main():
         try:
             response = requests.post(url, json=data)
             if response.status_code == 200:
-                print("Connected to Keep Alive Server")
+                print("Connected to worker-pool")
                 print(response.text)
                 registered_coordinator = True
                 id = response.json()["id"]
             else:
-                print("Error to connect to keep alive server")
+                print("Error to connect to worker-pool")
                 print(response.status_code + response.text)
                 time.sleep(3)
         except requests.exceptions.RequestException as e:

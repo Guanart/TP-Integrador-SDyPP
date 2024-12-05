@@ -70,12 +70,12 @@ def workers_with_live():
                 remove_worker_by_id(worker["id"])
         if len(workers_alive)<1:
             print("LEVANTANDO WORKERS de CPU, ya que no quedan más Workers en la blockchain...")
-            #levanto workers cpu pool en kubernetes.
+            # Levanto workers cpu en kubernetes.
             pass
         if get_len_gpu_workers()>=1:
             if (len(workers_alive) - get_len_gpu_workers()) != 0:
                 print("ELIMINANDO WORKERS de CPU, ya que hay Workers en la blockchain...")
-                #bajo los workers cpu de kubernetes.
+                # Bajo los workers cpu de kubernetes.
             pass
         time.sleep(10)
 
