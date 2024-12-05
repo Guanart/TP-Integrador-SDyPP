@@ -66,3 +66,6 @@ Tiempo transcurrido: 0.069603 segundos
 Tiempo transcurrido: 0.066164 segundos
 Tiempo transcurrido: 0.076252 segundos
 Tiempo transcurrido: 0.080884 segundos
+Tiempo transcurrido: 0.075997 segundos
+Tiempo transcurrido: 0.081451 segundos
+Tiempo transcurrido: 0.084819 segundos

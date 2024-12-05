@@ -1078,3 +1078,4 @@ Tiempo transcurrido: 0.078549 segundos
 Tiempo transcurrido: 0.078774 segundos
 Tiempo transcurrido: 0.075174 segundos
 Tiempo transcurrido: 0.079119 segundos
+Tiempo transcurrido: 0.079739 segundos

@@ -39,7 +39,8 @@ def transaction():
             return jsonify({'error': 'Faltan uno o más campos necesarios.'}), 400
 
         print(f"Transacción recibida: {data}")
-        # Encolar en RabbitMQ!
+
+        # Encolar la transacción en RabbitMQ!
         channel.basic_publish(exchange='', routing_key='transactions', body=json.dumps(data))
         return jsonify({'message': 'Transacción recibida y encolada en RabbitMQ.', "data": data}), 200
     except Exception as e:
@@ -74,24 +75,40 @@ def postear_task(last_element):
             "num_max": 99999999,
             "last_hash": last_element["hash"] if last_element else ""
         }
-        # Guardo en Redis el la tarea:
-        redis_utils.post_task(last_id, task)      
+        # Guardo en Redis la tarea:
+        redis_utils.post_task(last_id, task)   
         last_task = task
         
         # Encolar en RabbitMQ en el topic
         channel.basic_publish(exchange='blockchain_challenge', routing_key='tasks', body=json.dumps(task))
-        print(f"Encolando tarea para los workers: {task}")
+        print(f"Encolando tarea para los workers. Descripcion de la tarea: {task}")
         print()
+        
+        # Inicio el timer
         time_challenge_initiate = datetime.now(timezone.utc)
     else:
         print(f"No hay transacciones por el momento.")
         print()
 
+def repostear_task():
+    global last_task
+    global time_challenge_initiate
+
+    # Guardo en Redis la tarea:
+    redis_utils.post_task(last_id, last_task)   
+    
+    # Encolar en RabbitMQ en el topic
+    channel.basic_publish(exchange='blockchain_challenge', routing_key='tasks', body=json.dumps(last_task))
+    print(f"Encolando tarea para los workers. Descripcion de la tarea: {last_task}")
+    print()
+    
+    # Inicio el timer
+    time_challenge_initiate = datetime.now(timezone.utc)
+
 def task_building():
     global prefix
     global time_challenge_initiate
     global redis_utils
-    global previous_task
     global last_task
     global last_id
 
@@ -100,21 +117,26 @@ def task_building():
         print()
 
         last_element = redis_utils.get_latest_element() # Obtener último bloque de la blockchain
-        last_id = last_element["id"] + 1 if last_element else 0
+        # Aumento el last_id con respecto al ultimo bloque de la blockchain
+        last_id = last_element["id"] + 1 if last_element else 0 
 
+        # Si la ultima tarea que se publicó es igual al ultimo id, significa que ningun worker ha publicado la solución
         if last_task != None and last_task['id'] == last_id:
             # Obtengo la diferencia de tiempo
             time_challenge_terminated = datetime.now(timezone.utc)
             time_difference = (time_challenge_terminated - time_challenge_initiate).total_seconds()
 
+            # Si pasaron 5 minutos y todavía nadie respondio, se disminuye el prefijo
             if time_difference >= 300 and len(prefix) > 1:
                 prefix = prefix[:-1]  # Quitar un "0"
-                print(f"Ningún worker resolvió la tarea en 10 minutos, disminuyendo dificultad: {prefix}")
+                print(f"Ningún worker resolvió la tarea en 5 minutos, disminuyendo dificultad: {prefix}")
                 print()
-                postear_task(last_element)
-
+                last_task["prefix"] = prefix
+                # Se repostea la misma tarea que nadie pudo responder, pero con un prefijo menos
+                repostear_task()
+            
             time.sleep(30)
-            continue
+            continue # Vuelvo a ejecutar el bucle, sin pasar por postear_task
 
         postear_task(last_element)                
         time.sleep(30)  # Cambiar a 60
@@ -143,8 +165,6 @@ def solved_task():
         transactions = data.get("transactions")
         received_hash = data.get("hash")
 
-        # Evita colisiones
-        #time.sleep(random.random())
         if redis_utils.exists_id(block_id):
             return jsonify({'error': 'El bloque ya existe.'}), 400
 
@@ -153,12 +173,15 @@ def solved_task():
         if not received_hash.startswith(prefijo):
             return jsonify({'error': 'El hash no tiene el prefijo requerido.'}), 400
 
+        if redis_utils.exists_id(block_id):
+            return jsonify({'error': 'El bloque ya existe.'}), 400
+        
         last_element = redis_utils.get_latest_element()
         if last_element:
             current_hash = last_element['hash']
         else:
             current_hash = ""
-
+        
         combined_data = f"{number}{len(transactions)}{current_hash}"
         hash_calculado = calcular_hash(combined_data)
 
@@ -168,7 +191,10 @@ def solved_task():
 
         if received_hash != hash_calculado:
             return jsonify({'error': 'Hash invalido. Descartado.'}), 400
-                
+        
+        if redis_utils.exists_id(block_id):
+            return jsonify({'error': 'El bloque ya existe.'}), 400
+
         block = {
             "id": block_id,
             "hash": received_hash,
@@ -191,16 +217,16 @@ def solved_task():
 
         if time_difference > 75 and len(prefix) > 1:
             prefix = prefix[:-1]  # Quitar un "0"
-            print(f"NUEVO PREFIJO: {prefix}")
+            print(f"NUEVO PREFIJO (disminuyo): {prefix}")
             print()
         elif time_difference < 30:
             prefix += "0"
-            print(f"NUEVO PREFIJO: {prefix}")
+            print(f"NUEVO PREFIJO (aumento): {prefix}")
             print()
 
         redis_utils.delete_task(block_id)
 
-        return jsonify({"message": "Bloque añadido a la Blockchain.", "data": block}), 200
+        return jsonify({"message": "Bloque añadido a la Blockchain."}), 200
     except Exception as e:
         return jsonify({"error": e}), 500
 
