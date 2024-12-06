@@ -19,7 +19,7 @@ resource "google_container_node_pool" "general" {
 
   autoscaling {
     min_node_count = 1
-    max_node_count = 2
+    max_node_count = 10
   }
 
   lifecycle {
@@ -29,8 +29,8 @@ resource "google_container_node_pool" "general" {
   }
   node_config {
     preemptible  = false
-    machine_type = "e2-small"
-    disk_size_gb = 10  # Tamaño del disco en GB
+    machine_type = "e2-standard-2"
+    disk_size_gb = 20  # Tamaño del disco en GB
 
     labels = {
       role = "general"
@@ -43,39 +43,39 @@ resource "google_container_node_pool" "general" {
   }
 }
 
-resource "google_container_node_pool" "spot" {
-  name       = "spot"
-  cluster    = google_container_cluster.primary.id
-  node_count = 1
+# resource "google_container_node_pool" "spot" {
+#   name       = "spot"
+#   cluster    = google_container_cluster.primary.id
+#   node_count = 1
 
-  management {
-    auto_repair  = true
-    auto_upgrade = true
-  }
+#   management {
+#     auto_repair  = true
+#     auto_upgrade = true
+#   }
 
-  autoscaling {
-    min_node_count = 1
-    max_node_count = 2
-  }
+#   autoscaling {
+#     min_node_count = 1
+#     max_node_count = 2
+#   }
 
-  node_config {
-    preemptible  = true
-    machine_type = "e2-small"
-    disk_size_gb = 10  # Tamaño del disco en GB
+#   node_config {
+#     preemptible  = true
+#     machine_type = "e2-small"
+#     disk_size_gb = 10  # Tamaño del disco en GB
 
-    labels = {
-      team = "devops"
-    }
+#     labels = {
+#       team = "devops"
+#     }
 
-    taint {     // ESTO ME PERMITIRÁ INDICAR QUÉ TIPO DE MÁQUINA USAR EN LOS DEPLOYMENTS, agregando un toleration en los workers -> para que usen una SPOT
-      key    = "instance_type"
-      value  = "spot"
-      effect = "NO_SCHEDULE"
-    }
+#     taint {     // ESTO ME PERMITIRÁ INDICAR QUÉ TIPO DE MÁQUINA USAR EN LOS DEPLOYMENTS, agregando un toleration en los workers -> para que usen una SPOT
+#       key    = "instance_type"
+#       value  = "spot"
+#       effect = "NO_SCHEDULE"
+#     }
 
-    service_account = google_service_account.kubernetes.email
-    oauth_scopes = [
-      "https://www.googleapis.com/auth/cloud-platform"
-    ]
-  }
-}
+#     service_account = google_service_account.kubernetes.email
+#     oauth_scopes = [
+#       "https://www.googleapis.com/auth/cloud-platform"
+#     ]
+#   }
+# }
