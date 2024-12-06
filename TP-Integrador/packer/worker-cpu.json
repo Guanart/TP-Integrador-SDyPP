@@ -1,0 +1,39 @@
+{
+  "variables": {
+    "gcloud_account_json": "credentials.json",
+    "gcloud_project_id": "integrador-sdypp"
+  },
+  "builders": [
+    {
+      "type": "googlecompute",
+      "account_file": "{{user `gcloud_account_json`}}",
+      "project_id": "{{user `gcloud_project_id`}}",
+      "region": "us-east1",
+      "zone": "us-east1-d",
+      "source_image_family": "ubuntu-2204-lts",
+      "source_image_project": "ubuntu-os-cloud",
+      "machine_type": "e2-small",
+      "disk_size": 20,
+      "spot": true,
+      "ssh_username": "packer",
+	  	"on_host_maintenance": "TERMINATE",
+      "tags": ["spot-instance", "docker", "worker"]
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "sudo apt-get update -y",
+        "sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common",
+        "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/docker.gpg",
+        "sudo add-apt-repository \"deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\"",
+        "sudo apt-get update -y",
+        "sudo apt-get install -y docker-ce docker-ce-cli containerd.io",
+        "sudo systemctl start docker",
+        "sudo systemctl enable docker",
+        "sudo docker pull grupo4sdypp2024/tp-integrador-worker"
+      ]
+    }
+  ]
+}
