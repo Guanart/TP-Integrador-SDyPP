@@ -32,3 +32,10 @@ spec:
           #     port: 5001
           #   initialDelaySeconds: 5
           #   periodSeconds: 10
+      resources:
+        requests:
+          memory: "128Mi"  # Reservar 128Mi para garantizar que no sea evictado fácilmente
+          cpu: "250m"      # Reservar una pequeña cantidad de CPU
+        limits:
+          memory: "256Mi"  # Permitir que use hasta 256Mi en picos
+          cpu: "500m"      # Permitir un uso de CPU más alto si lo necesita
