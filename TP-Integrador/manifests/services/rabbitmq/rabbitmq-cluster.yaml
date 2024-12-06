@@ -20,5 +20,8 @@ spec:
       cluster_partition_handling = pause_minority
       queue_master_locator = min-masters
       disk_free_limit.absolute = 2GB
+      default_user = guest
+      default_pass = guest
+      loopback_users.guest = false
   service:
     type: ClusterIP
