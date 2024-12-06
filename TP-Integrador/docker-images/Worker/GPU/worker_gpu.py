@@ -1,3 +1,4 @@
+import os
 import pika
 import json
 import minero_gpu
@@ -91,8 +92,8 @@ def main():
     threading.Thread(target=send_keep_alive, daemon=True).start()
     
     # Configuración de RabbitMQ
-    rabbitmq_host = 'localhost'
-    rabbitmq_port = 5672
+    rabbitmq_host = os.environ.get("RABBITMQ_HOST")
+    rabbitmq_port = os.environ.get("RABBITMQ_PORT")
     connected_rabbit = False
     while not connected_rabbit:
         try:

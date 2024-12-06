@@ -1,21 +1,19 @@
 from google.cloud import compute_v1
 from google.oauth2 import service_account
-import time
 import os
 
-
 PROJECT_ID = "integrador-sdypp"
-ZONE = 'us-east1-d'
+ZONE = 'us-central1-b'
 CREDENTIALS_PATH = os.environ.get("CREDENTIALS_PATH")
 
 def crear_instancias(cantidad):
     credentials = service_account.Credentials.from_service_account_file(CREDENTIALS_PATH)
 
     # Configuración de la instancia
-    INSTANCE_NAME_PREFIX = 'worker_cpu'  # Nombre de la instancia que crearás
-    MACHINE_TYPE = f'zones/{ZONE}/machineTypes/e2-samall'
-    SUBNETWORK = f'projects/{PROJECT_ID}/regions/us-east1/subnetworks/default'
-    SOURCE_IMAGE = f'projects/{PROJECT_ID}/global/images/NOMBRE'
+    INSTANCE_NAME_PREFIX = 'workercpu'
+    MACHINE_TYPE = f'zones/{ZONE}/machineTypes/e2-small' 
+    SUBNETWORK = f'projects/{PROJECT_ID}/regions/us-central1/subnetworks/default'
+    SOURCE_IMAGE = f'projects/{PROJECT_ID}/global/images/packer-1733515674' 
     NETWORK_INTERFACE = {
         'subnetwork': SUBNETWORK,
         'access_configs': [
@@ -24,6 +22,8 @@ def crear_instancias(cantidad):
             }
         ]
     }
+
+    compute_client = compute_v1.InstancesClient(credentials=credentials)
 
     for i in range(cantidad):
         instance_name = f"{INSTANCE_NAME_PREFIX}{i+1}"
@@ -45,24 +45,27 @@ def crear_instancias(cantidad):
                     {
                         'key': 'startup-script',
                         'value': '#!/bin/bash\n'
-                                 'sudo docker run -d -p 5000:5000 --name worker-cpu grupo4sdypp/worker'
+                                 'sudo docker run -d -p 5000:5000 --name worker-cpu grupo4sdypp/tp-integrador-cpu-worker:1.0.0'
                     }
                 ]
             }
         }
 
         print(f"Creating instance {instance_name}...")
-        compute_client = compute_v1.InstancesClient(credentials=credentials)
-
+        
         # Crear la instancia
-        compute_client.insert(
+        operation = compute_client.insert(
             project=PROJECT_ID,
             zone=ZONE,
             instance_resource=config
         )
 
-    print(f"Instances created succesfully.")
+        # Esperar la operación
+        operation.result()  # Esto bloqueará hasta que la instancia se haya creado
 
+        print(f"Instance {instance_name} created successfully!")
+
+    print(f"All instances created successfully.")
 
 def destruir_instancias():
     credentials = service_account.Credentials.from_service_account_file(CREDENTIALS_PATH)
@@ -76,7 +79,14 @@ def destruir_instancias():
     for instance in instance_list:
         instance_name = instance.name
         print(f"Deleting instance {instance_name}...")
+
         # Eliminar la instancia
         compute_client.delete(
-            project=PROJECT_ID, zone=ZONE, instance=instance_name)
+            project=PROJECT_ID, zone=ZONE, instance=instance_name
+        )
+
     print("All instances have been destroyed.")
+
+# Llamadas de ejemplo:
+# Crear 5 instancias
+crear_instancias(2)

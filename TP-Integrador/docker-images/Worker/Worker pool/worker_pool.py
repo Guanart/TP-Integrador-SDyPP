@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 import json
+import os
 import random
 import time
 from flask import Flask, request, jsonify
@@ -169,8 +170,8 @@ def connect_keep_alive_server():
 
 def main():
     # Configuración de RabbitMQ
-    consume_rabbitmq_host = 'rabbitmq'
-    consume_rabbitmq_port = 5672
+    consume_rabbitmq_host = os.environ.get("RABBITMQ_HOST")
+    consume_rabbitmq_port = os.environ.get("RABBITMQ_PORT")
     consume_connected_rabbit = False
     while not consume_connected_rabbit:
         try:
@@ -198,8 +199,8 @@ def main():
 
 if __name__ == "__main__": 
     # CONECTARSE AL RABBIT MQ DONDE SE PUBLICAN LAS TASKS PARA LOS WORKERS (rabbit del pool de workers):
-    rabbitmq_host = 'rabbitmq-worker-pool'
-    rabbitmq_port = 5673
+    rabbitmq_host = os.environ.get("POOL_RABBITMQ_HOST")
+    rabbitmq_port = os.environ.get("POOL_RABBITMQ_PORT")
     rabbitmq_exchange = 'blockchain_challenge'
     connected_rabbit = False
     while not connected_rabbit:

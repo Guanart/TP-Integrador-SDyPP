@@ -1,3 +1,4 @@
+import os
 import pika
 import json
 import hashlib
@@ -96,8 +97,8 @@ def main():
     
 
     # Configuración de RabbitMQ
-    rabbitmq_host = 'rabbitmq'
-    rabbitmq_port = 5672
+    rabbitmq_host = os.environ.get("RABBITMQ_HOST")
+    rabbitmq_port = os.environ.get("RABBITMQ_PORT")
     connected_rabbit = False
     while not connected_rabbit:
         try:

@@ -1,0 +1,8 @@
+FROM python:3.10.14-alpine3.20
+WORKDIR /app
+COPY . .
+RUN pip install --upgrade pip
+RUN pip install google-cloud-compute google-auth
+ENV PYTHONUNBUFFERED=1
+ENV CREDENTIALS_PATH="./credentials.json"
+CMD ["python", "levantar_workers.py"]
