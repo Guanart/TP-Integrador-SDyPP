@@ -30,7 +30,7 @@ resource "google_container_node_pool" "general" {
   node_config {
     preemptible  = false
     machine_type = "e2-standard-2"
-    disk_size_gb = 20  # Tamaño del disco en GB
+    # disk_size_gb = 15  # Tamaño del disco en GB
 
     labels = {
       role = "general"
