@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import os
 import threading
 from flask import Flask, request, jsonify
 import pika
@@ -232,12 +233,12 @@ def solved_task():
 
 if __name__ == "__main__":
     # Configuración de Redis
-    redis_host = 'redis'
-    redis_port = 6379
-    redis_db = 0
+    redis_host = os.environ.get("REDIS_HOST")
+    redis_port = os.environ.get("REDIS_PORT")
+    redis_db = os.environ.get("REDIS_DB")
     # Configuración de RabbitMQ
-    rabbitmq_host = 'rabbitmq'
-    rabbitmq_port = 5672
+    rabbitmq_host = os.environ.get("RABBITMQ_HOST")
+    rabbitmq_port = os.environ.get("RABBITMQ_PORT")
     rabbitmq_queue = 'transactions'
     rabbitmq_exchange = 'blockchain_challenge'
     connected_redis = False
