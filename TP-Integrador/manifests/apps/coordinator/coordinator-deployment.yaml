@@ -20,18 +20,18 @@ spec:
           image: grupo4sdypp2024/tp-integrador-coordinator:1.0.0
           ports:
             - containerPort: 5000
-          livenessProbe:
-            httpGet:
-              path: /status
-              port: 5000
-            initialDelaySeconds: 30
-            periodSeconds: 10
-          readinessProbe:
-            httpGet:
-              path: /status
-              port: 8080
-            initialDelaySeconds: 5
-            periodSeconds: 10
+          # livenessProbe:
+          #   httpGet:
+          #     path: /status
+          #     port: 5000
+          #   initialDelaySeconds: 30
+          #   periodSeconds: 10
+          # readinessProbe:
+          #   httpGet:
+          #     path: /status
+          #     port: 8080
+          #   initialDelaySeconds: 5
+          #   periodSeconds: 10
       resources:
         requests:
           memory: "128Mi"  # Reservar 128Mi para garantizar que no sea evictado fácilmente
