@@ -16,13 +16,14 @@ spec:
       containers:
       - name: redis
         image: redis:alpine
-        command: ["/bin/sh", "-c", "redis-server --requirepass ${REDIS_PASSWORD}"]
-        env:
-        - name: REDIS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: redis-secret
-              key: password
+        command: ["/bin/sh", "-c", "redis-server"]
+        # command: ["/bin/sh", "-c", "redis-server --requirepass ${REDIS_PASSWORD}"]
+        # env:
+        # - name: REDIS_PASSWORD
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: redis-secret
+        #       key: password
         ports:
         - containerPort: 6379
           name: redis
