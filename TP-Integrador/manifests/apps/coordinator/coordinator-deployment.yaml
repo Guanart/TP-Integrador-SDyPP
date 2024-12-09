@@ -31,6 +31,16 @@ spec:
                 configMapKeyRef:
                   name: coordinator-config
                   key: RABBITMQ_PORT
+            - name: RABBITMQ_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: coordinator-config
+                  key: RABBITMQ_USER
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: coordinator-config
+                  key: RABBITMQ_PASSWORD
             - name: REDIS_HOST
               valueFrom:
                 configMapKeyRef:

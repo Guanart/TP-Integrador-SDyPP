@@ -6,6 +6,8 @@ metadata:
 data:
   RABBITMQ_HOST: "rabbitmq.services.svc.cluster.local"
   RABBITMQ_PORT: "5672"
+  RABBITMQ_USER: "user"
+  RABBITMQ_PASSWORD: "password"
   REDIS_HOST: "redis.services.svc.cluster.local"
   REDIS_PORT: "6379"
   REDIS_DB: "0"
