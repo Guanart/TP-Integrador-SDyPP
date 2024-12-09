@@ -3,29 +3,24 @@
 ports:
   web:
     port: 80
-    expose: true
-    exposedPort: 80
-    protocol: TCP
+    expose:
+      enabled: true
   websecure:
     port: 443
-    expose: true
-    exposedPort: 443
-    protocol: TCP
+    expose:
+      enabled: true
   coordinator:
     port: 5000
-    expose: true
-    exposedPort: 5000
-    protocol: TCP
+    expose:
+      enabled: true
   keepalive:
     port: 5001
-    expose: true
-    exposedPort: 5001
-    protocol: TCP
+    expose:
+      enabled: true
   rabbitmq:
     port: 5672
-    expose: true
-    exposedPort: 5672
-    protocol: TCP
+    expose:
+      enabled: true
 
 
 # providers:
