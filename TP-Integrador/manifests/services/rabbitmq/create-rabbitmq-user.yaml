@@ -1,0 +1,13 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: create-rabbitmq-user
+  namespace: services
+spec:
+  template:
+    spec:
+      containers:
+      - name: rabbitmq
+        image: rabbitmq:3-management
+        command: ["sh", "-c", "rabbitmqctl add_user user password && rabbitmqctl set_user_tags user administrator && rabbitmqctl set_permissions -p / user '.*' '.*' '.*'"]
+      restartPolicy: OnFailure
