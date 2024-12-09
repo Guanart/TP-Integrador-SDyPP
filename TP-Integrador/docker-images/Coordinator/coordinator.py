@@ -239,6 +239,8 @@ if __name__ == "__main__":
     # Configuración de RabbitMQ
     rabbitmq_host = os.environ.get("RABBITMQ_HOST")
     rabbitmq_port = os.environ.get("RABBITMQ_PORT")
+    rabbitmq_user = os.environ.get("RABBITMQ_USER")
+    rabbitmq_password = os.environ.get("RABBITMQ_PASSWORD")
     rabbitmq_queue = 'transactions'
     rabbitmq_exchange = 'blockchain_challenge'
     connected_redis = False
@@ -256,7 +258,9 @@ if __name__ == "__main__":
     connected_rabbit = False
     while not connected_rabbit:
         try:
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host, port=rabbitmq_port, heartbeat=0))
+            credentials = pika.PlainCredentials(rabbitmq_user, rabbitmq_password)
+            parameters = pika.ConnectionParameters(host=rabbitmq_host, port=rabbitmq_port, credentials=credentials, heartbeat=0)
+            connection = pika.BlockingConnection(parameters)
             channel = connection.channel()
             # Crear cola
             channel.queue_declare(queue=rabbitmq_queue, durable=True)

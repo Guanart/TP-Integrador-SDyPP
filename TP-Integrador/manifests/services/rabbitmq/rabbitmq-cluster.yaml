@@ -4,7 +4,7 @@ metadata:
   name: rabbitmq
   namespace: services
 spec:
-  replicas: 3
+  replicas: 2
   persistence:
     storageClassName: standard
     storage: 1Gi
@@ -21,8 +21,7 @@ spec:
       queue_master_locator = min-masters
       disk_free_limit.absolute = 2GB
       listeners.tcp.default = 5672
-      default_user = guest
-      default_pass = guest
-      loopback_users.guest = false
+      default_user = user
+      default_pass = password
   service:
     type: ClusterIP
