@@ -1,31 +1,31 @@
 # Archivo de configuración Helm para Traefik. Este archivo se utiliza para personalizar la instalación de Traefik mediante el Helm chart oficial de Traefik.
 
 ports:
-web:
-  port: 80
-  expose: true
-  exposedPort: 80
-  protocol: TCP
-websecure:
-  port: 443
-  expose: true
-  exposedPort: 443
-  protocol: TCP
-coordinator:
-  port: 5000
-  expose: true
-  exposedPort: 5000
-  protocol: TCP
-keepalive:
-  port: 5001
-  expose: true
-  exposedPort: 5001
-  protocol: TCP
-rabbitmq:
-  port: 5672
-  expose: true
-  exposedPort: 5672
-  protocol: TCP
+  web:
+    port: 80
+    expose: true
+    exposedPort: 80
+    protocol: TCP
+  websecure:
+    port: 443
+    expose: true
+    exposedPort: 443
+    protocol: TCP
+  coordinator:
+    port: 5000
+    expose: true
+    exposedPort: 5000
+    protocol: TCP
+  keepalive:
+    port: 5001
+    expose: true
+    exposedPort: 5001
+    protocol: TCP
+  rabbitmq:
+    port: 5672
+    expose: true
+    exposedPort: 5672
+    protocol: TCP
 
 
 # providers:
