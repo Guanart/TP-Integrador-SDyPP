@@ -2,9 +2,9 @@ import redis
 import json
 
 class RedisUtils:
-    def __init__(self, host='redis', port=6379, db=0):
+    def __init__(self, redis_client):
         """Initialize Redis connection with security."""
-        self.redis_client = redis.StrictRedis(host=host, port=port, db=db, decode_responses=True)
+        self.redis_client = redis_client
 
     def post_message(self, message, list_key='blockchain'):
         """Serialize and add a message to the beginning of a Redis list."""

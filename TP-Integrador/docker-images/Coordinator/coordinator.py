@@ -11,8 +11,6 @@ import hashlib
 import random
 from redis_utils import RedisUtils
 
-redis_utils = RedisUtils()
-
 app = Flask(__name__)
 prefix = "000"
 last_task = None
@@ -248,6 +246,7 @@ if __name__ == "__main__":
         try:
             connected_redis = False
             redis_client = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_db, decode_responses=True)
+            redis_utils = RedisUtils(redis_client)
             connected_redis = True
             print("Conectado a Redis")
             print()
