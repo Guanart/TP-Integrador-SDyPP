@@ -25,3 +25,16 @@ spec:
       default_pass = password
   service:
     type: ClusterIP
+  initContainers:
+  - name: create-rabbitmq-user
+    image: rabbitmq:3-management
+    command: ['sh', '-c', 'until rabbitmqctl await_startup; do sleep 5; done; rabbitmqctl add_user user password && rabbitmqctl set_user_tags user administrator && rabbitmqctl set_permissions -p / user ".*" ".*" ".*"']
+    env:
+    - name: RABBITMQ_ERLANG_COOKIE
+      valueFrom:
+        secretKeyRef:
+          name: rabbitmq-erlang-cookie
+          key: cookie
+    volumeMounts:
+    - name: rabbitmq-data
+      mountPath: /var/lib/rabbitmq
