@@ -16,7 +16,7 @@ spec:
       containers:
       - name: redis
         image: redis:alpine
-        command: ["/bin/sh", "-c", "redis-server"]
+        command: ["/bin/sh", "-c", "redis-server --loglevel debug"]
         # command: ["/bin/sh", "-c", "redis-server --requirepass ${REDIS_PASSWORD}"]
         # Se pueden usar ConfigMaps para configurar el password de Redis
         # env:
