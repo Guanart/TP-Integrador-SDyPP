@@ -1,20 +1,30 @@
 # Archivo de configuración Helm para Traefik. Este archivo se utiliza para personalizar la instalación de Traefik mediante el Helm chart oficial de Traefik.
 
 ports:
+  web:
+    expose: true
+    port: 80
+    targetPort: 80
+    protocol: TCP
+  websecure:
+    expose: true
+    port: 443
+    targetPort: 443
+    protocol: TCP
   coordinator:
     expose: true
-    port: 5000        # Puerto público de Traefik para Coordinator
-    targetPort: 5000  # Puerto interno donde escucha Coordinator
+    port: 5000
+    targetPort: 5000
     protocol: TCP
   keepalive:
     expose: true
-    port: 5001        # Puerto público de Traefik para Keepalive
-    targetPort: 5001  # Puerto interno donde escucha Keepalive
+    port: 5001
+    targetPort: 5001
     protocol: TCP
   rabbitmq:
     expose: true
-    port: 5672        # Puerto público de Traefik para RabbitMQ
-    targetPort: 5672  # Puerto interno donde escucha RabbitMQ
+    port: 5672
+    targetPort: 5672
     protocol: TCP
 
 service:
@@ -26,37 +36,6 @@ providers:
   kubernetesCRD: {}
   kubernetesIngress: {}
 
-tcp:
-  routers:
-    coordinator-router:
-      entryPoints:
-        - coordinator
-      service: coordinator-service
-      rule: "HostSNI(*)"  # Acepta tráfico en el puerto 5000
-    keepalive-router:
-      entryPoints:
-        - keepalive
-      service: keepalive-service
-      rule: "HostSNI(*)"  # Acepta tráfico en el puerto 5001
-    rabbitmq-router:
-      entryPoints:
-        - rabbitmq
-      service: rabbitmq-service
-      rule: "HostSNI(*)"  # Acepta tráfico en el puerto 5672
-
-  services:
-    coordinator-service:
-      loadBalancer:
-        servers:
-          - address: "coordinator.apps.svc.cluster.local:5000"  # Dirección interna del servicio Coordinator
-    keepalive-service:
-      loadBalancer:
-        servers:
-          - address: "keepalive.apps.svc.cluster.local:5001"  # Dirección interna del servicio KeepAlive
-    rabbitmq-service:
-      loadBalancer:
-        servers:
-          - address: "rabbitmq.services.svc.cluster.local:5672"  # Dirección interna del servicio RabbitMQ
 
 
 
