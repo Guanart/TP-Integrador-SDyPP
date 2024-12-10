@@ -3,18 +3,18 @@
 ports:
   coordinator:
     expose: true
-    port: 5000
-    targetPort: 5000
+    port: 5000        # Puerto público de Traefik para Coordinator
+    targetPort: 5000  # Puerto interno donde escucha Coordinator
     protocol: TCP
   keepalive:
     expose: true
-    port: 5001
-    targetPort: 5001
+    port: 5001        # Puerto público de Traefik para Keepalive
+    targetPort: 5001  # Puerto interno donde escucha Keepalive
     protocol: TCP
   rabbitmq:
     expose: true
-    port: 5672
-    targetPort: 5672
+    port: 5672        # Puerto público de Traefik para RabbitMQ
+    targetPort: 5672  # Puerto interno donde escucha RabbitMQ
     protocol: TCP
 
 service:
@@ -22,45 +22,41 @@ service:
   spec:
     loadBalancerIP: "35.229.42.126"  # Reemplaza con tu IP estática regional
 
+providers:
+  kubernetesCRD: {}
+  kubernetesIngress: {}
+
 tcp:
   routers:
     coordinator-router:
       entryPoints:
         - coordinator
       service: coordinator-service
-      rule: "HostSNI(*)"
+      rule: "HostSNI(*)"  # Acepta tráfico en el puerto 5000
     keepalive-router:
       entryPoints:
         - keepalive
       service: keepalive-service
-      rule: "HostSNI(*)"
+      rule: "HostSNI(*)"  # Acepta tráfico en el puerto 5001
     rabbitmq-router:
       entryPoints:
         - rabbitmq
       service: rabbitmq-service
-      rule: "HostSNI(*)"
+      rule: "HostSNI(*)"  # Acepta tráfico en el puerto 5672
 
   services:
     coordinator-service:
       loadBalancer:
         servers:
-          - address: "coordinator.apps.svc.cluster.local:5000"
+          - address: "coordinator.apps.svc.cluster.local:5000"  # Dirección interna del servicio Coordinator
     keepalive-service:
       loadBalancer:
         servers:
-          - address: "keepalive.apps.svc.cluster.local:5001"
+          - address: "keepalive.apps.svc.cluster.local:5001"  # Dirección interna del servicio KeepAlive
     rabbitmq-service:
       loadBalancer:
         servers:
-          - address: "rabbitmq.services.svc.cluster.local:5672"
-
-entryPoints:
-  coordinator:
-    address: ":5000"
-  keepalive:
-    address: ":5001"
-  rabbitmq:
-    address: ":5672"
+          - address: "rabbitmq.services.svc.cluster.local:5672"  # Dirección interna del servicio RabbitMQ
 
 
 
