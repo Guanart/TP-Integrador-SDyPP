@@ -1,41 +1,52 @@
 # Archivo de configuración Helm para Traefik. Este archivo se utiliza para personalizar la instalación de Traefik mediante el Helm chart oficial de Traefik.
 
 ports:
-  web:
-    expose: true
-    port: 80
-    targetPort: 80
+  traefik:
+    port: 8080
+    expose:
+      default: true
+    exposedPort: 8080
     protocol: TCP
-  websecure:
-    expose: true
-    port: 443
-    targetPort: 443
-    protocol: TCP
+
   coordinator:
-    expose: true
     port: 5000
-    targetPort: 5000
+    expose:
+      default: true
+    exposedPort: 5000
     protocol: TCP
+
   keepalive:
-    expose: true
     port: 5001
-    targetPort: 5001
+    expose:
+      default: true
+    exposedPort: 5001
     protocol: TCP
+
   rabbitmq:
-    expose: true
     port: 5672
-    targetPort: 5672
+    expose:
+      default: true
+    exposedPort: 5672
     protocol: TCP
 
 service:
   type: LoadBalancer
   spec:
-    loadBalancerIP: "35.229.42.126"  # Reemplaza con tu IP estática regional
+    # Puedes asignar una IP estática aquí si usas una IP reservada de GCP
+    loadBalancerIP: "35.229.42.126"  
+    ports:
+      # - port: 80
+      #   targetPort: 80
+      - port: 5000
+        targetPort: 5000
+      - port: 5001
+        targetPort: 5001
+      - port: 5672
+        targetPort: 5672
 
 providers:
   kubernetesCRD: {}
   kubernetesIngress: {}
-
 
 
 
