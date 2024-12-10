@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-service
+  namespace: traefik
+spec:
+  selector:
+    app: traefik
+  ports:
+    - name: web
+      port: 80
+      targetPort: 80
+    - name: websecure
+      port: 443
+      targetPort: 443
+    - name: coordinator
+      port: 5000
+      targetPort: 5000
+    - name: keepalive
+      port: 5001
+      targetPort: 5001
+    - name: rabbitmq
+      port: 5672
+      targetPort: 5672
+  type: LoadBalancer
+  loadBalancerIP: 35.229.42.126
