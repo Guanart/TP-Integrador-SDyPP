@@ -1,26 +1,67 @@
 # Archivo de configuración Helm para Traefik. Este archivo se utiliza para personalizar la instalación de Traefik mediante el Helm chart oficial de Traefik.
 
 ports:
-  web:
-    port: 80
-    expose:
-      enabled: true
-  websecure:
-    port: 443
-    expose:
-      enabled: true
   coordinator:
+    expose: true
     port: 5000
-    expose:
-      enabled: true
+    targetPort: 5000
+    protocol: TCP
   keepalive:
+    expose: true
     port: 5001
-    expose:
-      enabled: true
+    targetPort: 5001
+    protocol: TCP
   rabbitmq:
+    expose: true
     port: 5672
-    expose:
-      enabled: true
+    targetPort: 5672
+    protocol: TCP
+
+service:
+  type: LoadBalancer
+  spec:
+    loadBalancerIP: "35.229.42.126"  # Reemplaza con tu IP estática regional
+
+tcp:
+  routers:
+    coordinator-router:
+      entryPoints:
+        - coordinator
+      service: coordinator-service
+      rule: "HostSNI(*)"
+    keepalive-router:
+      entryPoints:
+        - keepalive
+      service: keepalive-service
+      rule: "HostSNI(*)"
+    rabbitmq-router:
+      entryPoints:
+        - rabbitmq
+      service: rabbitmq-service
+      rule: "HostSNI(*)"
+
+  services:
+    coordinator-service:
+      loadBalancer:
+        servers:
+          - address: "coordinator.apps.svc.cluster.local:5000"
+    keepalive-service:
+      loadBalancer:
+        servers:
+          - address: "keepalive.apps.svc.cluster.local:5001"
+    rabbitmq-service:
+      loadBalancer:
+        servers:
+          - address: "rabbitmq.services.svc.cluster.local:5672"
+
+entryPoints:
+  coordinator:
+    address: ":5000"
+  keepalive:
+    address: ":5001"
+  rabbitmq:
+    address: ":5672"
+
 
 
 # providers:
