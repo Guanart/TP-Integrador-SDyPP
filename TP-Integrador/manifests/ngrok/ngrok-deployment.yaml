@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: ngrok
-          image: wernight/ngrok:latest
+          image: wernight/ngrok:latest  # https://github.com/wernight/docker-ngrok
           command: ["/bin/sh", "-c", "echo \"$NGROK_CONFIG\" > /home/ngrok/.ngrok2/ngrok.yml && ngrok start --config /home/ngrok/.ngrok2/ngrok.yml --all"]
           env:
             - name: NGROK_CONFIG
@@ -25,6 +25,8 @@ spec:
                 secretKeyRef:
                   name: ngrok-secret
                   key: ngrok-config
+            - name: NGROK_DEBUG
+              value: "true"
           ports:
             - containerPort: 5000  # Exponer el puerto 5000
             - containerPort: 5001  # Exponer el puerto 5001
