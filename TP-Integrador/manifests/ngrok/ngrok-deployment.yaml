@@ -17,7 +17,9 @@ spec:
     spec:
       containers:
         - name: ngrok
-          image: wernight/ngrok:latest
+          image: wernight/ngrok:latest  # https://github.com/wernight/docker-ngrok
+          # args: ["start", "--config", "/home/ngrok/.ngrok2/ngrok.yml", "--all"]
+          command: ["/bin/sh", "-c", "echo \"$NGROK_CONFIG\" > /home/ngrok/.ngrok2/ngrok.yml && ngrok start --config /home/ngrok/.ngrok2/ngrok.yml --all && ngrok tcp 5000 --log=stdout & ngrok tcp 5001 --log=stdout & ngrok tcp 5672 --log=stdout"]
           env:
             - name: NGROK_CONFIG
               valueFrom:
@@ -26,49 +28,13 @@ spec:
                   key: ngrok-config
             - name: NGROK_DEBUG
               value: "true"
-          command: ["/bin/sh", "-c", "ngrok tcp 5000 --log=stdout & ngrok tcp 5001 --log=stdout & ngrok tcp 5672 --log=stdout"]
           ports:
-            - containerPort: 5000
-            - containerPort: 5001
-            - containerPort: 5672
-
-# apiVersion: apps/v1
-# kind: Deployment
-# metadata:
-#   name: ngrok
-#   namespace: ngrok
-#   labels:
-#     app: ngrok
-# spec:
-#   replicas: 1
-#   selector:
-#     matchLabels:
-#       app: ngrok
-#   template:
-#     metadata:
-#       labels:
-#         app: ngrok
-#     spec:
-#       containers:
-#         - name: ngrok
-#           image: wernight/ngrok:latest  # https://github.com/wernight/docker-ngrok
-#           # args: ["start", "--config", "/home/ngrok/.ngrok2/ngrok.yml", "--all"]
-#           command: ["/bin/sh", "-c", "echo \"$NGROK_CONFIG\" > /home/ngrok/.ngrok2/ngrok.yml && ngrok start --config /home/ngrok/.ngrok2/ngrok.yml --all"]
-#           env:
-#             - name: NGROK_CONFIG
-#               valueFrom:
-#                 secretKeyRef:
-#                   name: ngrok-secret
-#                   key: ngrok-config
-#             - name: NGROK_DEBUG
-#               value: "true"
-#           ports:
-#             - containerPort: 5000  # Exponer el puerto 5000
-#             - containerPort: 5001  # Exponer el puerto 5001
-#             - containerPort: 5672  # Exponer el puerto 5672
-#       volumeMounts:
-#         - name: ngrok-config-volume
-#           mountPath: /home/ngrok/.ngrok2
-#       volumes:
-#         - name: ngrok-config-volume
-#           emptyDir: {}
+            - containerPort: 5000  # Exponer el puerto 5000
+            - containerPort: 5001  # Exponer el puerto 5001
+            - containerPort: 5672  # Exponer el puerto 5672
+      volumeMounts:
+        - name: ngrok-config-volume
+          mountPath: /home/ngrok/.ngrok2
+      volumes:
+        - name: ngrok-config-volume
+          emptyDir: {}
