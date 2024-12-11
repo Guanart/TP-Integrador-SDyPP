@@ -34,7 +34,7 @@ spec:
       containers:
         - name: ngrok
           image: wernight/ngrok:latest
-          command: ["ngrok", "start", "--config", "/home/ngrok/.ngrok2/ngrok.yml", "--all"]
+          command: ["/bin/sh", "-c", "cat /home/ngrok/.ngrok2/ngrok.yml && ngrok start --config /home/ngrok/.ngrok2/ngrok.yml --all"]
           volumeMounts:
             - name: ngrok-config-volume
               mountPath: /home/ngrok/.ngrok2
