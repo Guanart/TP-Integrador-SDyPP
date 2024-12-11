@@ -18,7 +18,7 @@ spec:
       initContainers:
         - name: init-ngrok
           image: wernight/ngrok:latest
-          command: ["/bin/sh", "-c", "echo \"authtoken: $NGROK_AUTH_TOKEN\" > /home/ngrok/.ngrok2/ngrok.yml"]
+          command: ["/bin/sh", "-c", "echo -e \"authtoken: $NGROK_AUTH_TOKEN\n$(cat /etc/ngrok/ngrok.yml)\" > /home/ngrok/.ngrok2/ngrok.yml"]
           env:
             - name: NGROK_AUTH_TOKEN
               valueFrom:
@@ -27,14 +27,20 @@ spec:
                   key: authtoken
           volumeMounts:
             - name: ngrok-config
+              mountPath: /etc/ngrok
+              subPath: ngrok.yml
+            - name: ngrok-config-volume
               mountPath: /home/ngrok/.ngrok2
       containers:
         - name: ngrok
           image: wernight/ngrok:latest
           command: ["ngrok", "start", "--config", "/home/ngrok/.ngrok2/ngrok.yml", "--all"]
           volumeMounts:
-            - name: ngrok-config
+            - name: ngrok-config-volume
               mountPath: /home/ngrok/.ngrok2
       volumes:
         - name: ngrok-config
+          configMap:
+            name: ngrok-config
+        - name: ngrok-config-volume
           emptyDir: {}
