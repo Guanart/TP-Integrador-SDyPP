@@ -25,6 +25,10 @@ spec:
                 secretKeyRef:
                   name: ngrok-secret
                   key: ngrok-config
+          ports:
+            - containerPort: 5000  # Exponer el puerto 5000
+            - containerPort: 5001  # Exponer el puerto 5001
+            - containerPort: 5672  # Exponer el puerto 5672
       volumeMounts:
         - name: ngrok-config-volume
           mountPath: /home/ngrok/.ngrok2
