@@ -18,7 +18,7 @@ spec:
       containers:
         - name: ngrok
           image: wernight/ngrok:latest
-          command: ["/bin/sh", "-c", "ngrok config add-authtoken $NGROK_AUTH_TOKEN && ngrok start --config /etc/ngrok/ngrok.yml --all"]
+          command: ["/bin/sh", "-c", "ngrok config add-authtoken $NGROK_AUTH_TOKEN && ngrok start --config /home/ngrok/.ngrok2/ngrok.yml --all"]
           env:
             - name: NGROK_AUTH_TOKEN
               valueFrom:
@@ -27,7 +27,7 @@ spec:
                   key: authtoken
           volumeMounts:
             - name: ngrok-config
-              mountPath: /etc/ngrok/ngrok.yml
+              mountPath: /home/ngrok/.ngrok2/ngrok.yml
               subPath: ngrok.yml
       volumes:
         - name: ngrok-config
