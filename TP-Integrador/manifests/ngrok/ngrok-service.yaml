@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: ngrok-service
+  name: ngrok
   namespace: ngrok
 spec:
   selector:
