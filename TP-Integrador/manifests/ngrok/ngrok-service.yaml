@@ -7,13 +7,16 @@ spec:
   selector:
     app: ngrok
   ports:
-    - protocol: TCP
+    - name: coordinator
+      protocol: TCP
       port: 5000
       targetPort: 5000
-    - protocol: TCP
+    - name: keepalive
+      protocol: TCP
       port: 5001
       targetPort: 5001
-    - protocol: TCP
+    - name: rabbitmq
+      protocol: TCP
       port: 5672
       targetPort: 5672
   type: LoadBalancer
