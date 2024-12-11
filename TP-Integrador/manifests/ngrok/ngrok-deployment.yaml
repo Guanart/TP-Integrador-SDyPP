@@ -27,7 +27,7 @@ spec:
                   key: authtoken
           volumeMounts:
             - name: ngrok-config
-              mountPath: /etc/ngrok
+              mountPath: /etc/ngrok/ngrok.yml
               subPath: ngrok.yml
       volumes:
         - name: ngrok-config
