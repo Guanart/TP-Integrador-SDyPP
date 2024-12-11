@@ -18,9 +18,7 @@ spec:
       containers:
         - name: ngrok
           image: wernight/ngrok:latest
-          args:
-            - start
-            - --all
+          command: ["ngrok", "start", "--all"]
           env:
             - name: NGROK_AUTHTOKEN
               valueFrom:
