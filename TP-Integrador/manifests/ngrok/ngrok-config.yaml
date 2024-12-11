@@ -5,6 +5,7 @@ metadata:
   namespace: ngrok
 data:
   ngrok.yml: |
+    version: "2"
     tunnels:
       coordinator:
         addr: coordinator.apps.svc.cluster.local:5000
