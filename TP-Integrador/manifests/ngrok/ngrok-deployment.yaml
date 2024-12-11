@@ -21,6 +21,11 @@ spec:
           # args: ["start", "--config", "/home/ngrok/.ngrok2/ngrok.yml", "--all"]
           command: ["/bin/sh", "-c", "echo \"$NGROK_CONFIG\" > /home/ngrok/.ngrok2/ngrok.yml && ngrok start --config /home/ngrok/.ngrok2/ngrok.yml --all && ngrok tcp 5000 --log=stdout & ngrok tcp 5001 --log=stdout & ngrok tcp 5672 --log=stdout"]
           env:
+            - name: NGROK_AUTHTOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ngrok-secret
+                  key: ngrok-authtoken
             - name: NGROK_CONFIG
               valueFrom:
                 secretKeyRef:
