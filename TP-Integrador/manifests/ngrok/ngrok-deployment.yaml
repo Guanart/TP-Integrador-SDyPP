@@ -15,32 +15,19 @@ spec:
       labels:
         app: ngrok
     spec:
-      initContainers:
-        - name: init-ngrok
-          image: wernight/ngrok:latest
-          command: ["/bin/sh", "-c", "echo -e \"authtoken: $NGROK_AUTH_TOKEN\n$(cat /etc/ngrok/ngrok.yml)\" > /home/ngrok/.ngrok2/ngrok.yml"]
-          env:
-            - name: NGROK_AUTH_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: ngrok-secret
-                  key: authtoken
-          volumeMounts:
-            - name: ngrok-config
-              mountPath: /etc/ngrok
-              subPath: ngrok.yml
-            - name: ngrok-config-volume
-              mountPath: /home/ngrok/.ngrok2
       containers:
         - name: ngrok
           image: wernight/ngrok:latest
-          command: ["/bin/sh", "-c", "cat /etc/ngrok/ngrok.yml && cat /home/ngrok/.ngrok2/ngrok.yml && ngrok start --config /home/ngrok/.ngrok2/ngrok.yml --all"]
-          volumeMounts:
-            - name: ngrok-config-volume
-              mountPath: /home/ngrok/.ngrok2
+          command: ["/bin/sh", "-c", "echo \"$NGROK_CONFIG\" > /home/ngrok/.ngrok2/ngrok.yml && ngrok start --config /home/ngrok/.ngrok2/ngrok.yml --all"]
+          env:
+            - name: NGROK_CONFIG
+              valueFrom:
+                secretKeyRef:
+                  name: ngrok-secret
+                  key: ngrok-config
+      volumeMounts:
+        - name: ngrok-config-volume
+          mountPath: /home/ngrok/.ngrok2
       volumes:
-        - name: ngrok-config
-          configMap:
-            name: ngrok-config
         - name: ngrok-config-volume
           emptyDir: {}
