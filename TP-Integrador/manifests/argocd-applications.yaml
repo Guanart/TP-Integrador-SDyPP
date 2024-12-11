@@ -94,3 +94,22 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ngrok
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Guanart/SDyPP-2024-grupo-4.git
+    targetRevision: HEAD
+    path: TP-Integrador/manifests/ngrok
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: ngrok
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

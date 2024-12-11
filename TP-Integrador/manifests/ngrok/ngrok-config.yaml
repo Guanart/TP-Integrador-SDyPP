@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ngrok-config
+  namespace: ngrok
+data:
+  ngrok.yml: |
+    tunnels:
+      coordinator:
+        addr: coordinator.apps.svc.cluster.local:5000
+        proto: http
+      keepalive:
+        addr: keepalive.apps.svc.cluster.local:5001
+        proto: http
+      rabbit:
+        addr: rabbitmq.services.svc.cluster.local:5672
+        proto: tcp

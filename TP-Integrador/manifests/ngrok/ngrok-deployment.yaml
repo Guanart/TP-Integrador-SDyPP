@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ngrok
+  namespace: ngrok
+  labels:
+    app: ngrok
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ngrok
+  template:
+    metadata:
+      labels:
+        app: ngrok
+    spec:
+      containers:
+        - name: ngrok
+          image: wernight/ngrok:latest
+          args:
+            - start
+            - --all
+          env:
+            - name: NGROK_AUTHTOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ngrok-secret
+                  key: authtoken
+          volumeMounts:
+            - name: ngrok-config
+              mountPath: /etc/ngrok
+              subPath: ngrok.yml
+      volumes:
+        - name: ngrok-config
+          configMap:
+            name: ngrok-config
