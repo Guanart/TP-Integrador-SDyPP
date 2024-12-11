@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: game-2048
+  namespace: ngrok-ingress-controller
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+    # Puertos de coordinator, keepalive y rabbitmq
+    - name: coordinator
+      port: 5000
+      targetPort: 5000
+    - name: keepalive
+      port: 5001
+      targetPort: 5001
+    - name: rabbitmq
+      port: 5672
+      targetPort: 5672
+  selector:
+    app: game-2048
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: game-2048
+  namespace: ngrok-ingress-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: game-2048
+  template:
+    metadata:
+      labels:
+        app: game-2048
+    spec:
+      containers:
+        - name: backend
+          image: alexwhen/docker-2048
+          ports:
+            - name: http
+              containerPort: 80
+---
+# ngrok Kubernetes Operator Configuration
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: game-2048-ingress
+  namespace: ngrok-ingress-controller
+spec:
+  ingressClassName: ngrok
+  rules:
+    - host: sharp-slightly-cardinal.ngrok-free.app
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: game-2048
+                port:
+                  number: 80

@@ -1,0 +1,26 @@
+apiVersion: ingress.k8s.ngrok.com/v1
+kind: Tunnel
+metadata:
+  name: coordinator-tunnel
+  namespace: ngrok-ingress-controller
+spec:
+  proto: http
+  port: 5000
+---
+apiVersion: ingress.k8s.ngrok.com/v1
+kind: Tunnel
+metadata:
+  name: keepalive-tunnel
+  namespace: ngrok-ingress-controller
+spec:
+  proto: http
+  port: 5001
+---
+apiVersion: ingress.k8s.ngrok.com/v1
+kind: Tunnel
+metadata:
+  name: rabbit-tunnel
+  namespace: ngrok-ingress-controller
+spec:
+  proto: tcp
+  port: 5672
