@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 import threading
 from flask import Flask, request, jsonify
+from administrar_instancias import crear_instancias, destruir_instancias
 import json
 import time
 import uuid
@@ -70,14 +71,12 @@ def workers_with_live():
                 remove_worker_by_id(worker["id"])
         if len(workers_alive)<1:
             print("LEVANTANDO WORKERS de CPU, ya que no quedan más Workers en la blockchain...")
-            # Levanto workers cpu en kubernetes.
-            pass
+            crear_instancias(2)
         if get_len_gpu_workers()>=1:
             if (len(workers_alive) - get_len_gpu_workers()) != 0:
                 print("ELIMINANDO WORKERS de CPU, ya que hay Workers en la blockchain...")
-                # Bajo los workers cpu de kubernetes.
-            pass
-        time.sleep(10)
+                destruir_instancias()
+        time.sleep(20)
 
 if __name__ == "__main__":
     threading.Thread(target=workers_with_live).start()
