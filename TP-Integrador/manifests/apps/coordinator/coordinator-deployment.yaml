@@ -20,6 +20,24 @@ spec:
           image: grupo4sdypp2024/tp-integrador-coordinator:1.0.1
           ports:
             - containerPort: 5000
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          startupProbe:
+            httpGet:
+              path: /status
+              port: 5000
+            initialDelaySeconds: 60
+            periodSeconds: 10
           env:
             - name: RABBITMQ_HOST
               valueFrom:
