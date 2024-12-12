@@ -38,7 +38,7 @@ metadata:
   name: postgres
   namespace: database
 spec:
-  type: ClusterIP
+  type: LoadBalancer
   ports:
   - port: 5432
     targetPort: 5432
