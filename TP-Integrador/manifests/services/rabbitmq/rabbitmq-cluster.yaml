@@ -26,6 +26,10 @@ spec:
       default_pass = password
   service:
     type: ClusterIP
+    ports:
+      - name: amqp
+        port: 5672
+        targetPort: 5672
   initContainers:
   - name: create-rabbitmq-user
     image: rabbitmq:3-management
