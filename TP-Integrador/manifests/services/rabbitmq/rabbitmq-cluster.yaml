@@ -1,52 +1,52 @@
-apiVersion: rabbitmq.com/v1beta1
-kind: RabbitmqCluster
-metadata:
-    name: rabbitmq
-    namespace: services
-spec:
-    image: rabbitmq:3.12-management # rabbitmq:3.13-management
-    service:
-        type: LoadBalancer
-    replicas: 3
 # apiVersion: rabbitmq.com/v1beta1
 # kind: RabbitmqCluster
 # metadata:
-#   name: rabbitmq
-#   namespace: services
+#     name: rabbitmq
+#     namespace: services
 # spec:
-#   replicas: 2
-#   persistence:
-#     storageClassName: standard
-#     storage: 1Gi
-#   resources:
-#     requests:
-#       cpu: 1000m
-#       memory: 2Gi
-#     limits:
-#       cpu: 1000m
-#       memory: 2Gi
-#   # rabbitmq:
-#   #   additionalConfig: |
-#   #     cluster_partition_handling = pause_minority
-#   #     queue_master_locator = min-masters
-#   #     disk_free_limit.absolute = 2GB
-#   #     management.tcp.port = 15672
-#   #     listeners.tcp.default = 5672
-#   #     default_user = user
-#   #     default_pass = password
-#   #     loopback_users.guest = false
-#   service:
-#     type: LoadBalancer
-#     # ports:
-#     #   - name: amqp
-#     #     port: 5672
-#     #     targetPort: 5672
-#     #   - name: management
-#     #     port: 15672
-#     #     targetPort: 15672
-#     #   - name: prometheus
-#     #     port: 15692
-#     #     targetPort: 15692
+#     image: rabbitmq:3.12-management # rabbitmq:3.13-management
+#     service:
+#         type: LoadBalancer
+#     replicas: 3
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: rabbitmq
+  namespace: services
+spec:
+  replicas: 2
+  persistence:
+    storageClassName: standard
+    storage: 1Gi
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+  rabbitmq:
+    additionalConfig: |
+      cluster_partition_handling = pause_minority
+      queue_master_locator = min-masters
+      disk_free_limit.absolute = 2GB
+      management.tcp.port = 15672
+      listeners.tcp.default = 5672
+      default_user = user
+      default_pass = password
+      loopback_users.guest = false
+  service:
+    type: ClusterIP
+    # ports:
+    #   - name: amqp
+    #     port: 5672
+    #     targetPort: 5672
+    #   - name: management
+    #     port: 15672
+    #     targetPort: 15672
+    #   - name: prometheus
+    #     port: 15692
+    #     targetPort: 15692
 #   initContainers:
 #   - name: create-rabbitmq-user
 #     image: rabbitmq:3.12-management
