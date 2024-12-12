@@ -26,7 +26,7 @@ spec:
       default_pass = password
       loopback_users.guest = false
   service:
-    type: ClusterIP
+    type: LoadBalancer
     ports:
       - name: amqp
         port: 5672
