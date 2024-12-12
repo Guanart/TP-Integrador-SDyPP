@@ -1,25 +1,25 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: rabbitmq-loadbalancer
-  namespace: services
-  annotations:
-    cloud.google.com/neg: '{"ingress":true}'
-  labels:
-    app: rabbitmq
-    app.kubernetes.io/component: rabbitmq
-    app.kubernetes.io/name: rabbitmq
-    app.kubernetes.io/part-of: rabbitmq
-spec:
-  type: LoadBalancer
-  ports:
-    - name: amqp
-      port: 5672
-      protocol: TCP
-      targetPort: 5672
-    - name: management-ui
-      port: 15672
-      protocol: TCP
-      targetPort: 15672
-  selector:
-    app.kubernetes.io/name: rabbitmq
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: rabbitmq-loadbalancer
+#   namespace: services
+#   annotations:
+#     cloud.google.com/neg: '{"ingress":true}'
+#   labels:
+#     app: rabbitmq
+#     app.kubernetes.io/component: rabbitmq
+#     app.kubernetes.io/name: rabbitmq
+#     app.kubernetes.io/part-of: rabbitmq
+# spec:
+#   type: LoadBalancer
+#   ports:
+#     - name: amqp
+#       port: 5672
+#       protocol: TCP
+#       targetPort: 5672
+#     - name: management-ui
+#       port: 15672
+#       protocol: TCP
+#       targetPort: 15672
+#   selector:
+#     app.kubernetes.io/name: rabbitmq

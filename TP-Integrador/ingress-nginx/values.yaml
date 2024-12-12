@@ -1,6 +1,6 @@
 # - https://medium.com/@suyeshsingh/exposing-tcp-upd-services-via-nginx-ingress-controller-the-helm-way-aca70aeebaba
 # - https://kubernetes.github.io/ingress-nginx/user-guide/exposing-tcp-udp-services/
 tcp:
-  5672: "services/rabbitmq:5672"
+  # 5672: "services/rabbitmq:5672"
   5000: "apps/coordinator:5000"
   5001: "apps/keepalive:5001"
