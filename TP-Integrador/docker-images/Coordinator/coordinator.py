@@ -47,7 +47,21 @@ def transaction():
 
 @app.route('/status', methods=['GET'])
 def status():
-    return jsonify({'message': 'running'}), 200
+    global redis_client, connection 
+    try:
+        # Verificar conexión a Redis
+        redis_client.ping()  # Si la conexión está bien, no lanzará excepciones
+        # Verificar conexión a RabbitMQ
+        if connection.is_open:  # Si la conexión está abierta, no lanzará excepciones
+            return jsonify({'message': 'running'}), 200
+        else:
+            return jsonify({'error': 'No se está conectado a RabbitMQ'}), 500
+    except redis.ConnectionError:
+        return jsonify({'error': 'No se está conectado a Redis'}), 500
+    except pika.exceptions.AMQPConnectionError:
+        return jsonify({'error': 'No se está conectado a RabbitMQ'}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 def postear_task(last_element):
     global last_id
