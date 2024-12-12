@@ -3,6 +3,13 @@ kind: Service
 metadata:
   name: rabbitmq-loadbalancer
   namespace: services
+  annotations:
+    cloud.google.com/neg: '{"ingress":true}'
+  labels:
+    app: rabbitmq
+    app.kubernetes.io/component: rabbitmq
+    app.kubernetes.io/name: rabbitmq
+    app.kubernetes.io/part-of: rabbitmq
 spec:
   type: LoadBalancer
   ports:
@@ -15,4 +22,4 @@ spec:
       protocol: TCP
       targetPort: 15672
   selector:
-    app: rabbitmq
+    app.kubernetes.io/name: rabbitmq
