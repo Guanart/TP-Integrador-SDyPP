@@ -15,4 +15,4 @@ spec:
       protocol: TCP
       targetPort: 15672
   selector:
-    app.kubernetes.io/name: rabbitmq
+    app: rabbitmq
