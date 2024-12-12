@@ -36,7 +36,6 @@ def receive_keep_alive():
             id_generado = str(generate_id())
             workers_conectados.append({
                 "id": id_generado,
-                "type": data["type"],
                 'last_keep_alive': datetime.now(timezone.utc),
                 'missed_keep_alives': 0
             })
@@ -118,11 +117,10 @@ def post_result(data):
 @app.route('/solved_task', methods=["POST"])
 def resend_result():
     global resuelto
-
     if not resuelto:
+        resuelto = True
         data = request.get_json()
         post_result(data)
-        resuelto = True
         return jsonify({"message": "Bloque enviado a la Blockchain.", "data": data}), 200
     return jsonify({"error": "Tarea ya resuelta"}), 400
 
@@ -205,7 +203,7 @@ if __name__ == "__main__":
     connected_rabbit = False
     while not connected_rabbit:
         try:
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host, port=rabbitmq_port, heartbeat=0))
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host, port=rabbitmq_port, credentials=pika.PlainCredentials('guest', 'guest'), heartbeat=0))
             channel = connection.channel()
             channel.exchange_declare(exchange=rabbitmq_exchange, exchange_type='topic', durable=True)
             connected_rabbit = True

@@ -5,6 +5,8 @@ import os
 PROJECT_ID = "integrador-sdypp"
 ZONE = 'us-central1-b'
 CREDENTIALS_PATH = os.environ.get("CREDENTIALS_PATH")
+rabbitmq_host = os.environ.get("RABBITMQ_HOST")
+rabbitmq_port = os.environ.get("RABBITMQ_PORT")
 
 def crear_instancias(cantidad):
     credentials = service_account.Credentials.from_service_account_file(CREDENTIALS_PATH)
@@ -44,8 +46,13 @@ def crear_instancias(cantidad):
                 'items': [
                     {
                         'key': 'startup-script',
-                        'value': '#!/bin/bash\n'
-                                 'sudo docker run -d -p 5000:5000 --name worker-cpu grupo4sdypp/tp-integrador-cpu-worker:1.0.0'
+                        'value': f"""#!/bin/bash
+                        sudo docker run -d -p 5000:5000 \
+                        --name worker-cpu \
+                        -e RABBITMQ_HOST={rabbitmq_host} \
+                        -e RABBITMQ_PORT={rabbitmq_port} \
+                        grupo4sdypp/tp-integrador-cpu-worker:1.0.0"""
+                        
                     }
                 ]
             }

@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 import threading
 from flask import Flask, request, jsonify
 from administrar_instancias import crear_instancias, destruir_instancias
-import json
 import time
 import uuid
 
