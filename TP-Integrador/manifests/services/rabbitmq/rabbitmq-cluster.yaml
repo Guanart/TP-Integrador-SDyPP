@@ -4,7 +4,7 @@ metadata:
     name: rabbitmq
     namespace: rabbitmq-namespace
 spec:
-    image: rabbitmq:3.12-management # rabbitmq:3.13-management
+    image: rabbitmq:3.10 # rabbitmq:3.13-management
     service:
         type: LoadBalancer
     replicas: 3
