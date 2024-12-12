@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-loadbalancer
+  namespace: services
+spec:
+  type: LoadBalancer
+  ports:
+    - name: amqp
+      port: 5672
+      protocol: TCP
+      targetPort: 5672
+    - name: management-ui
+      port: 15672
+      protocol: TCP
+      targetPort: 15672
+  selector:
+    app.kubernetes.io/name: rabbitmq

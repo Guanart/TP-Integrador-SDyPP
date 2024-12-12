@@ -10,11 +10,11 @@ spec:
     storage: 1Gi
   resources:
     requests:
-      memory: 256Mi
-      cpu: 250m
+      cpu: 1000m
+      memory: 2Gi
     limits:
-      memory: 512Mi
-      cpu: 500m
+      cpu: 1000m
+      memory: 2Gi
   rabbitmq:
     additionalConfig: |
       cluster_partition_handling = pause_minority
@@ -26,11 +26,17 @@ spec:
       default_pass = password
       loopback_users.guest = false
   service:
-    type: LoadBalancer
+    type: ClusterIP
     ports:
       - name: amqp
         port: 5672
         targetPort: 5672
+      - name: management
+        port: 15672
+        targetPort: 15672
+      - name: prometheus
+        port: 15692
+        targetPort: 15692
   initContainers:
   - name: create-rabbitmq-user
     image: rabbitmq:3-management
