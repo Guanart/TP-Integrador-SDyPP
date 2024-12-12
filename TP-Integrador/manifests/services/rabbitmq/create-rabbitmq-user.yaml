@@ -1,26 +1,26 @@
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: create-rabbitmq-user
-  namespace: services
-spec:
-  template:
-    spec:
-      containers:
-      - name: rabbitmq
-        image: rabbitmq:3-management
-        command: ["sh", "-c", "rabbitmqctl add_user newuser newpassword && rabbitmqctl set_user_tags newuser administrator && rabbitmqctl set_permissions -p / newuser '.*' '.*' '.*'"]
-        env:
-        - name: RABBITMQ_ERLANG_COOKIE
-          valueFrom:
-            secretKeyRef:
-              name: rabbitmq-erlang-cookie
-              key: cookie
-        volumeMounts:
-        - name: rabbitmq-data
-          mountPath: /var/lib/rabbitmq
-      restartPolicy: OnFailure
-      volumes:
-      - name: rabbitmq-data
-        persistentVolumeClaim:
-          claimName: rabbitmq-pvc
+# apiVersion: batch/v1
+# kind: Job
+# metadata:
+#   name: create-rabbitmq-user
+#   namespace: services
+# spec:
+#   template:
+#     spec:
+#       containers:
+#       - name: rabbitmq
+#         image: rabbitmq:3-management
+#         command: ["sh", "-c", "rabbitmqctl add_user newuser newpassword && rabbitmqctl set_user_tags newuser administrator && rabbitmqctl set_permissions -p / newuser '.*' '.*' '.*'"]
+#         env:
+#         - name: RABBITMQ_ERLANG_COOKIE
+#           valueFrom:
+#             secretKeyRef:
+#               name: rabbitmq-erlang-cookie
+#               key: cookie
+#         volumeMounts:
+#         - name: rabbitmq-data
+#           mountPath: /var/lib/rabbitmq
+#       restartPolicy: OnFailure
+#       volumes:
+#       - name: rabbitmq-data
+#         persistentVolumeClaim:
+#           claimName: rabbitmq-pvc
