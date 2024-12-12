@@ -24,6 +24,7 @@ spec:
       listeners.tcp.default = 5672
       default_user = user
       default_pass = password
+      loopback_users.guest = false
   service:
     type: ClusterIP
     ports:
