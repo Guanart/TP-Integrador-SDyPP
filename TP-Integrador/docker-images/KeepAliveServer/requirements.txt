@@ -1,1 +1,3 @@
 flask
+google-auth
+google-cloud-compute

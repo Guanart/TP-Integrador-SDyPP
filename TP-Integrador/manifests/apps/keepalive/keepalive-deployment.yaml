@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: keepalive
-          image: tp-integrador-keepalive:1.0.0
+          image: tp-integrador-keep-alive-server:1.0.0
           ports:
             - containerPort: 5001
           # livenessProbe:

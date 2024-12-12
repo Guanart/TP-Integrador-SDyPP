@@ -2,9 +2,15 @@ from google.cloud import compute_v1
 from google.oauth2 import service_account
 import os
 
-PROJECT_ID = "integrador-sdypp"
+PROJECT_ID = os.environ.get("PROJECT_ID")
 ZONE = 'us-central1-b'
 CREDENTIALS_PATH = os.environ.get("CREDENTIALS_PATH")
+user = os.environ.get("RABBITMQ_USER")
+password = os.environ.get("RABBITMQ_PASSWORD")
+coordinador_ip = os.environ.get("COORDINATOR_HOST")
+coordinador_puerto = os.environ.get("COORDINATOR_PORT")
+keep_alive_server_ip = os.environ.get("KEEPALIVE_HOST")
+keep_alive_server_puerto = os.environ.get("KEEPALIVE_PORT")
 rabbitmq_host = os.environ.get("RABBITMQ_HOST")
 rabbitmq_port = os.environ.get("RABBITMQ_PORT")
 
@@ -49,10 +55,15 @@ def crear_instancias(cantidad):
                         'value': f"""#!/bin/bash
                         sudo docker run -d -p 5000:5000 \
                         --name worker-cpu \
+                        -e RABBITMQ_USER={user} \
+                        -e RABBITMQ_PASSWORD={password} \
                         -e RABBITMQ_HOST={rabbitmq_host} \
                         -e RABBITMQ_PORT={rabbitmq_port} \
+                        -e COORDINATOR_HOST={coordinador_ip} \
+                        -e COORDINATOR_PORT={coordinador_puerto} \
+                        -e KEEPALIVE_HOST={keep_alive_server_ip} \
+                        -e KEEPALIVE_PORT={keep_alive_server_puerto} \
                         grupo4sdypp/tp-integrador-cpu-worker:1.0.0"""
-                        
                     }
                 ]
             }

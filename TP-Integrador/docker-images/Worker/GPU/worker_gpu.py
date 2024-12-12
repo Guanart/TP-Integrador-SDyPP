@@ -7,16 +7,19 @@ import time
 import threading
 
 id = -1
+coordinador_ip = os.environ.get("COORDINATOR_HOST")
+coordinador_puerto = os.environ.get("COORDINATOR_PORT")
+keep_alive_server_ip = os.environ.get("KEEPALIVE_HOST")
+keep_alive_server_puerto = os.environ.get("KEEPALIVE_PORT")
 
 def post_result(data):
-    url = "http://localhost:5000/solved_task"
+    url = f"http://{coordinador_ip}:{coordinador_puerto}/solved_task"
     try:
         response = requests.post(url, json=data)
-        print("Post response:", response.text)
+        print("POST response:", response.text)
     except requests.exceptions.RequestException as e:
         print("Failed to send POST request:", e)
 
-# #Minero: Encargado de realizar el desafio
 def minero(ch, method, properties, body):
     data = json.loads(body)
     print(f"Tarea recibida")
@@ -50,8 +53,7 @@ def minero(ch, method, properties, body):
 
 def send_keep_alive():
     global id
-    #url = "http://keep-alive-server:5001/alive"
-    url = "http://localhost:5001/alive"
+    url = f"http://{keep_alive_server_ip}:{keep_alive_server_puerto}/alive"
     data = {
         "id": id,
         "type": "gpu"
@@ -65,15 +67,13 @@ def send_keep_alive():
         except requests.exceptions.RequestException as e:
             print("Falló al hacer POST al keep-alive-server:", e)
 
-#Conexion con rabbit al topico y comienza a ser consumidor
 def main():
     global id
     data = {
         "id": id,
         "type": "gpu"
     }
-    #url = "http://keep-alive-server:5001/alive"
-    url = "http://localhost:5001/alive"
+    url = f"http://{keep_alive_server_ip}:{keep_alive_server_puerto}/alive"
     registered_coordinator = False
     while not registered_coordinator:
         try:
@@ -92,17 +92,18 @@ def main():
     threading.Thread(target=send_keep_alive, daemon=True).start()
     
     # Configuración de RabbitMQ
+    user = os.environ.get("RABBITMQ_USER")
+    password = os.environ.get("RABBITMQ_PASSWORD")
     rabbitmq_host = os.environ.get("RABBITMQ_HOST")
     rabbitmq_port = os.environ.get("RABBITMQ_PORT")
     connected_rabbit = False
     while not connected_rabbit:
         try:
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host, port=rabbitmq_port, credentials=pika.PlainCredentials('guest', 'guest'), heartbeat=0))
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host, port=rabbitmq_port, credentials=pika.PlainCredentials(f'{user}', f'{password}'), heartbeat=0))
             channel = connection.channel()
             channel.exchange_declare(exchange='blockchain_challenge', exchange_type='topic', durable=True)
             result = channel.queue_declare('', exclusive=True)
             queue_name = result.method.queue
-            # Si se conecta a un worker pool, entonces routing_key es su ID !!!!!!
             channel.queue_bind(exchange='blockchain_challenge', queue=queue_name, routing_key='tasks')
             connected_rabbit = True
             print("Ya se encuentra conectado a RabbitMQ!")
