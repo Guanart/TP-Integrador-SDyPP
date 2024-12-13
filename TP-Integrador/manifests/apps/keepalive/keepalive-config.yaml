@@ -4,13 +4,13 @@ metadata:
   name: keepalive-config
   namespace: apps
 data:
-  RABBITMQ_HOST: ??
+  RABBITMQ_HOST: ""
   RABBITMQ_PORT: "5672"
   RABBITMQ_USER: "user"
   RABBITMQ_PASSWORD: "password"
-  COORDINATOR_HOST: ??
+  COORDINATOR_HOST: ""
   COORDINATOR_PORT: "5000"
-  KEEPALIVE_HOST: ??
+  KEEPALIVE_HOST: ""
   KEEPALIVE_PORT: "5001"
-  PROJECT_ID: donde esta??? integrador-sdypp
-  CREDENTIALS_PATH: donde esta??? ./
+  PROJECT_ID: ""
+  CREDENTIALS_PATH: "./"

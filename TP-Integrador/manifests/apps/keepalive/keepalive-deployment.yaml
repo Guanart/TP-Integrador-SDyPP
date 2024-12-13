@@ -32,6 +32,57 @@ spec:
           #     port: 5001
           #   initialDelaySeconds: 5
           #   periodSeconds: 10
+          env: 
+            - name: RABBITMQ_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: keepalive-config
+                  key: RABBITMQ_HOST
+            - name: RABBITMQ_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: keepalive-config
+                  key: RABBITMQ_PORT
+            - name: RABBITMQ_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: keepalive-config
+                  key: RABBITMQ_USER
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: keepalive-config
+                  key: RABBITMQ_PASSWORD
+            - name: COORDINATOR_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: keepalive-config
+                  key: COORDINATOR_HOST
+            - name: COORDINATOR_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: keepalive-config
+                  key: COORDINATOR_PORT
+            - name: KEEPALIVE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: keepalive-config
+                  key: KEEPALIVE_HOST
+            - name: KEEPALIVE_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: keepalive-config
+                  key: KEEPALIVE_PORT
+            - name: PROJECT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: keepalive-config
+                  key: PROJECT_ID
+            - name: CREDENTIALS_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: keepalive-config
+                  key: CREDENTIALS_PATH
       resources:
         requests:
           memory: "128Mi"  # Reservar 128Mi para garantizar que no sea evictado fácilmente
