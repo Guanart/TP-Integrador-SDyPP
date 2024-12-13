@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 import threading
 from flask import Flask, request, jsonify
-from administrar_instancias import crear_instancias, destruir_instancias
+from administrar_instancias import crear_instancias, destruir_instancias, obtener_instancias
 import time
 import uuid
 
@@ -38,13 +38,14 @@ def receive_keep_alive():
                 'last_keep_alive': datetime.now(timezone.utc),
                 'missed_keep_alives': 0
             })
+            print(f"Se registró un nuevo worker, ID: {id}")
             message = {"message": "Worker registrado correctamente.", "id": id}
         elif (data["id"] != -1) and all(worker_registered["id"] != data["id"] for worker_registered in workers_alive):
-            print(data["id"])
-            print(workers_alive)
+            print("Se recibió un id que no está registrado, ID: " + data["id"])
+            print(f"Workers conectados: {workers_alive}")
             return jsonify({"error": "Worker id no registrado"}), 400
         else:
-            message = {"message": "Mensaje keep_alive recibido correctamente"}
+            message = {"message": "Mensaje keep_alive recibido correctamente de ID: " + data["id"]}
         
         for worker in workers_alive:
             if worker["id"]==data["id"]:
@@ -76,11 +77,12 @@ def workers_with_live():
             if worker["missed_keep_alives"]==3:
                 remove_worker_by_id(worker["id"])
         if len(workers_alive)<1:
-            print("LEVANTANDO WORKERS de CPU, ya que no quedan más Workers en la blockchain...")
-            crear_instancias(2)
-            print("Esperando 30 segundos a que se conecten los workers...")
-            time.sleep(30)
-            print("30 segundos transcurridos!")
+            if (obtener_instancias() == 0):
+                print("LEVANTANDO WORKERS de CPU, ya que no quedan más Workers en la blockchain...")
+                crear_instancias(2)
+                print("Esperando 30 segundos a que se conecten los workers...")
+                time.sleep(30)
+                print("30 segundos transcurridos!")
         if get_len_gpu_workers()>=1:
             if (len(workers_alive) - get_len_gpu_workers()) != 0:
                 print("ELIMINANDO WORKERS de CPU, ya que hay Workers en la blockchain...")

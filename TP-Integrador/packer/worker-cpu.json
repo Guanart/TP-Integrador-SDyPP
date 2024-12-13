@@ -16,7 +16,8 @@
       "ssh_username": "packer",
       "tags": ["spot-instance", "docker", "worker"],
       "preemptible": true,
-      "on_host_maintenance": "TERMINATE"
+      "on_host_maintenance": "TERMINATE",
+      "image_name": "packer-1734059877"
     }
   ],
   "provisioners": [
