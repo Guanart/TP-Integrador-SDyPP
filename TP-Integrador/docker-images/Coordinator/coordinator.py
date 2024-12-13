@@ -80,6 +80,7 @@ def postear_task(last_element):
             break  # No hay más mensajes para recibir
         
     if transactions:
+        print("Hay transacciones!")
         task = {
             "id": last_id,
             "transactions": transactions, 
@@ -89,9 +90,9 @@ def postear_task(last_element):
             "last_hash": last_element["hash"] if last_element else ""
         }
         # Guardo en Redis la tarea:
+        print("Voy a guardar la tarea en REDIS!!!!!")
         redis_utils.post_task(last_id, task)   
         last_task = task
-        
         # Encolar en RabbitMQ en el topic
         print("PUBLICANDO TAREA!!!!!")
         channel.basic_publish(exchange='blockchain_challenge', routing_key='tasks', body=json.dumps(task))
@@ -153,7 +154,7 @@ def task_building():
             time.sleep(30)
             continue # Vuelvo a ejecutar el bucle, sin pasar por postear_task
         
-        print("Voy a postear una tarea!")
+        print("Llamando a postear_task!!!!")
         postear_task(last_element)                
         time.sleep(30)  # Cambiar a 60
 
