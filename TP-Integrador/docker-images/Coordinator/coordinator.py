@@ -70,11 +70,14 @@ def postear_task(last_element):
 
     transactions = []
     while True:
+        print("ENTRO AL WHILE PARA OBTENER LAS TRANSACCIONES")
         method_frame, header_frame, body = channel.basic_get(queue='transactions', auto_ack=False)
         if method_frame:
             # Agregar la transacción al array de transacciones
+            print("Agrego una transacción")
             transactions.append(json.loads(body))
             # ACK del mensaje recibido
+            print("Mando ACK diciendo que recibí el mensaje")
             channel.basic_ack(delivery_tag=method_frame.delivery_tag)
         else:
             break  # No hay más mensajes para recibir
