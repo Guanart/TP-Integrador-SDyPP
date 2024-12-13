@@ -13,4 +13,4 @@ data:
   KEEPALIVE_HOST: ""
   KEEPALIVE_PORT: "5001"
   PROJECT_ID: ""
-  CREDENTIALS_PATH: "./"
+  CREDENTIALS_PATH: "./credentials.json"
