@@ -45,7 +45,8 @@ def receive_keep_alive():
             print(f"Workers conectados: {workers_alive}")
             return jsonify({"error": "Worker id no registrado"}), 400
         else:
-            message = {"message": "Mensaje keep_alive recibido correctamente de ID: " + data["id"]}
+            message = {"message": "Mensaje keep_alive recibido correctamente"}
+            print("Keep-alive recibido de ID: " + data["id"])
         
         for worker in workers_alive:
             if worker["id"]==data["id"]:
