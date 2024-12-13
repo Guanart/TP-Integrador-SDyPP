@@ -25,6 +25,9 @@ spec:
         #     secretKeyRef:
         #       name: redis-secret
         #       key: password
+        env:
+        - name: REDIS_ARGS
+          value: "--loglevel debug"
         ports:
         - containerPort: 6379
           name: redis
