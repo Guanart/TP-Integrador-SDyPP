@@ -104,7 +104,3 @@ def destruir_instancias():
         )
 
     print("All instances have been destroyed.")
-
-# Llamadas de ejemplo:
-# Crear 5 instancias
-crear_instancias(2)
