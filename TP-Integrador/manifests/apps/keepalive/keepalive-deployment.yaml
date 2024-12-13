@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: keepalive
-          image: grupo4sdypp2024/tp-integrador-keepalive:1.0.1
+          image: grupo4sdypp2024/tp-integrador-keepalive:1.0.1@sha256:8f392e52649056ba1a1470cbddc36433dcb47600565ace73e8da56127a2a3833
           imagePullPolicy: Always
           ports:
             - containerPort: 5001
