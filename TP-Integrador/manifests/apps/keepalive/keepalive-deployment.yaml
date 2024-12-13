@@ -24,19 +24,19 @@ spec:
           livenessProbe:
             httpGet:
               path: /status
-              port: 5000
+              port: 5001
             initialDelaySeconds: 30
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /status
-              port: 5000
+              port: 5001
             initialDelaySeconds: 5
             periodSeconds: 10
           startupProbe:
             httpGet:
               path: /status
-              port: 5000
+              port: 5001
             initialDelaySeconds: 60
             periodSeconds: 10
           env: 
