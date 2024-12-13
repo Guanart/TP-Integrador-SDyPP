@@ -93,6 +93,7 @@ def postear_task(last_element):
         last_task = task
         
         # Encolar en RabbitMQ en el topic
+        print("PUBLICANDO TAREA!!!!!")
         channel.basic_publish(exchange='blockchain_challenge', routing_key='tasks', body=json.dumps(task))
         print(f"Encolando tarea para los workers. Descripcion de la tarea: {task}")
         print()
@@ -135,6 +136,7 @@ def task_building():
 
         # Si la ultima tarea que se publicó es igual al ultimo id, significa que ningun worker ha publicado la solución
         if last_task != None and last_task['id'] == last_id:
+            print("ENTRÉ EN EL IF!!!!")
             # Obtengo la diferencia de tiempo
             time_challenge_terminated = datetime.now(timezone.utc)
             time_difference = (time_challenge_terminated - time_challenge_initiate).total_seconds()
@@ -150,7 +152,8 @@ def task_building():
             
             time.sleep(30)
             continue # Vuelvo a ejecutar el bucle, sin pasar por postear_task
-
+        
+        print("Voy a postear una tarea!")
         postear_task(last_element)                
         time.sleep(30)  # Cambiar a 60
 
