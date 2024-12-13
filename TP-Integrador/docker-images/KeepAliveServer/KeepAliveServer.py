@@ -11,6 +11,13 @@ workers_alive=[]
 def generate_id():
     return uuid.uuid4()
 
+@app.route('/status', methods=['GET'])
+def status():
+    try:
+        return jsonify({'message': 'running'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/alive', methods=["POST"])
 def receive_keep_alive():
     global workers_alive

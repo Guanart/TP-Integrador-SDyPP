@@ -17,22 +17,28 @@ spec:
     spec:
       containers:
         - name: keepalive
-          image: grupo4sdypp2024/tp-integrador-keepalive:1.0.6
+          image: grupo4sdypp2024/tp-integrador-keepalive:1.0.7
           imagePullPolicy: Always
           ports:
             - containerPort: 5001
-          # livenessProbe:
-          #   httpGet:
-          #     path: /health
-          #     port: 5001
-          #   initialDelaySeconds: 30
-          #   periodSeconds: 10
-          # readinessProbe:
-          #   httpGet:
-          #     path: /ready
-          #     port: 5001
-          #   initialDelaySeconds: 5
-          #   periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          startupProbe:
+            httpGet:
+              path: /status
+              port: 5000
+            initialDelaySeconds: 60
+            periodSeconds: 10
           env: 
             - name: RABBITMQ_HOST
               valueFrom:
