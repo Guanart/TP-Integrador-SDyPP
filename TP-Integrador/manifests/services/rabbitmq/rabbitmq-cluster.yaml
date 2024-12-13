@@ -20,10 +20,10 @@ spec:
     storage: 1Gi
   resources:
     requests:
-      cpu: 1000m
+      cpu: 500m
       memory: 2Gi
     limits:
-      cpu: 1000m
+      cpu: 500m
       memory: 2Gi
   rabbitmq:
     additionalConfig: |
