@@ -18,6 +18,7 @@ spec:
       containers:
         - name: keepalive
           image: grupo4sdypp2024/tp-integrador-keepalive:1.0.1
+          imagePullPolicy: Always
           ports:
             - containerPort: 5001
           # livenessProbe:
