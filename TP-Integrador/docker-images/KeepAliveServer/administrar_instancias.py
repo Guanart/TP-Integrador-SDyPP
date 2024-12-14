@@ -114,12 +114,8 @@ def obtener_instancias():
 
     # Listar todas las instancias en la zona especificada
     instance_list = compute_client.list(project=PROJECT_ID, zone=ZONE)
-
-    active_instance_count = 0
-
-    # Iterar sobre las instancias y contar cuántas están en estado "RUNNING"
+    instance_count = 0
     for instance in instance_list:
-        if instance.status == 'RUNNING':
-            active_instance_count += 1
-
-    return active_instance_count
+        #if instance.status == 'RUNNING':
+        instance_count += 1
+    return instance_count

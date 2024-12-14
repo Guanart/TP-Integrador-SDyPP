@@ -84,6 +84,9 @@ def workers_with_live():
                 print("Esperando 30 segundos a que se conecten los workers...")
                 time.sleep(30)
                 print("30 segundos transcurridos!")
+            else:
+                print("Hay instancias creadas, esperando a que sean eliminadas para poder levantar los nuevos Workers CPU...")
+                destruir_instancias()
         if get_len_gpu_workers()>=1:
             if (len(workers_alive) - get_len_gpu_workers()) != 0:
                 print("ELIMINANDO WORKERS de CPU, ya que hay Workers en la blockchain...")
