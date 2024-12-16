@@ -9,7 +9,7 @@
             "account_file": "{{user `gcloud_account_json`}}",
             "project_id": "{{user `gcloud_project_id`}}",
             "region": "us-central1",
-            "zone": "us-central1-b",
+            "zone": "us-central1-a",
             "source_image_family": "ubuntu-2204-lts",
             "machine_type": "e2-small",
             "disk_size": 20,
@@ -32,7 +32,9 @@
                 "sudo apt-get update -y",
                 "sudo apt-get install -y docker-ce docker-ce-cli containerd.io git",
                 "sudo systemctl start docker",
-                "sudo systemctl enable docker"
+                "sudo systemctl enable docker",
+                "git clone https://github.com/Guanart/SDyPP-2024-grupo-4.git",
+                "sudo docker pull grupo4sdypp2024/tp-integrador-pool-manager:1.0.1"
             ]
         }
     ]
