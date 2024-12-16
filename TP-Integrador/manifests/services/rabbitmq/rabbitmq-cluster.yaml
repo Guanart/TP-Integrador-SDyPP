@@ -27,7 +27,7 @@ spec:
   #     memory: 2Gi
   rabbitmq:
     additionalConfig: |
-      heartbeat = 0
+      heartbeat = 3600
   #    cluster_partition_handling = pause_minority
   #     queue_master_locator = min-masters
   #     disk_free_limit.absolute = 2GB

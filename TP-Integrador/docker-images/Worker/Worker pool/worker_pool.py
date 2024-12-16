@@ -183,7 +183,7 @@ def main():
     consume_connected_rabbit = False
     while not consume_connected_rabbit:
         try:
-            consume_connection = pika.BlockingConnection(pika.ConnectionParameters(host=CONSUME_RABBITMQ_HOST, port=CONSUME_RABBITMQ_PORT, credentials=pika.PlainCredentials(CONSUME_RABBITMQ_USER, CONSUME_RABBITMQ_PASSWORD), heartbeat=0))
+            consume_connection = pika.BlockingConnection(pika.ConnectionParameters(host=CONSUME_RABBITMQ_HOST, port=CONSUME_RABBITMQ_PORT, credentials=pika.PlainCredentials(CONSUME_RABBITMQ_USER, CONSUME_RABBITMQ_PASSWORD), heartbeat=3600))
             consume_channel = consume_connection.channel()
             consume_channel.exchange_declare(exchange='blockchain_challenge', exchange_type='topic', durable=True)
             result = consume_channel.queue_declare('', exclusive=True)
@@ -211,7 +211,7 @@ if __name__ == "__main__":
     connected_rabbit = False
     while not connected_rabbit:
         try:
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host=POOL_RABBITMQ_HOST, port=POOL_RABBITMQ_PORT, credentials=pika.PlainCredentials(POOL_RABBITMQ_USER, POOL_RABBITMQ_PASSWORD), heartbeat=0))
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host=POOL_RABBITMQ_HOST, port=POOL_RABBITMQ_PORT, credentials=pika.PlainCredentials(POOL_RABBITMQ_USER, POOL_RABBITMQ_PASSWORD), heartbeat=3600))
             channel = connection.channel()
             channel.exchange_declare(exchange=rabbitmq_exchange, exchange_type='topic', durable=True)
             connected_rabbit = True
