@@ -18,6 +18,8 @@ resuelto = False
 
 POOL_RABBITMQ_HOST = os.environ.get("POOL_RABBITMQ_HOST")
 POOL_RABBITMQ_PORT = os.environ.get("POOL_RABBITMQ_PORT")
+POOL_RABBITMQ_USER = os.environ.get("POOL_RABBITMQ_USER")
+POOL_RABBITMQ_PASSWORD = os.environ.get("POOL_RABBITMQ_PASSWORD")
 CONSUME_RABBITMQ_HOST = os.environ.get("CONSUME_RABBITMQ_HOST")
 CONSUME_RABBITMQ_PORT = os.environ.get("CONSUME_RABBITMQ_PORT")
 CONSUME_RABBITMQ_USER = os.environ.get("CONSUME_RABBITMQ_USER")
@@ -209,7 +211,7 @@ if __name__ == "__main__":
     connected_rabbit = False
     while not connected_rabbit:
         try:
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host=POOL_RABBITMQ_HOST, port=POOL_RABBITMQ_PORT, credentials=pika.PlainCredentials('guest', 'guest'), heartbeat=0))
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host=POOL_RABBITMQ_HOST, port=POOL_RABBITMQ_PORT, credentials=pika.PlainCredentials(POOL_RABBITMQ_USER, POOL_RABBITMQ_PASSWORD), heartbeat=0))
             channel = connection.channel()
             channel.exchange_declare(exchange=rabbitmq_exchange, exchange_type='topic', durable=True)
             connected_rabbit = True
