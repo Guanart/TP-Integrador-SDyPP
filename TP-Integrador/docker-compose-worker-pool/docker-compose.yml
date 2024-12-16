@@ -9,6 +9,19 @@ services:
       - my_network
     volumes:
       - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+    command: >
+          sh -c "
+          rabbitmq-server &
+          sleep 10 &&
+          rabbitmqctl add_user user password &&
+          rabbitmqctl set_user_tags user user &&
+          rabbitmqctl set_permissions -p / user '.*' '.*' '.*' &&
+          rabbitmqctl add_user admin admin &&
+          rabbitmqctl set_user_tags admin administrator &&
+          rabbitmqctl set_permissions -p / admin '.*' '.*' '.*' &&
+          rabbitmqctl stop &&
+          rabbitmq-server
+          "
   
   pool-manager:
     image: grupo4sdypp2024/tp-integrador-pool-manager:1.0.2
