@@ -13,6 +13,7 @@ services:
           sh -c "
           rabbitmq-server &
           sleep 10 &&
+          rabbitmqctl add_vhost / &&
           rabbitmqctl add_user user password &&
           rabbitmqctl set_user_tags user user &&
           rabbitmqctl set_permissions -p / user '.*' '.*' '.*' &&
