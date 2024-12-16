@@ -25,9 +25,10 @@ spec:
   #   limits:
   #     cpu: 500m
   #     memory: 2Gi
-  # rabbitmq:
-  #   additionalConfig: |
-  #     cluster_partition_handling = pause_minority
+  rabbitmq:
+    additionalConfig: |
+      heartbeat = 0
+  #    cluster_partition_handling = pause_minority
   #     queue_master_locator = min-masters
   #     disk_free_limit.absolute = 2GB
   #     management.tcp.port = 15672
