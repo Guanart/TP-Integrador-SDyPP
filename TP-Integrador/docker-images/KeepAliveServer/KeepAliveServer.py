@@ -38,7 +38,7 @@ def receive_keep_alive():
                 'last_keep_alive': datetime.now(timezone.utc),
                 'missed_keep_alives': 0
             })
-            print(f"Se registró un nuevo worker, ID: {id}")
+            print(f"Se registró un nuevo worker {data["type"]}, ID: {id}")
             message = {"message": "Worker registrado correctamente.", "id": id}
         elif (data["id"] != -1) and all(worker_registered["id"] != data["id"] for worker_registered in workers_alive):
             print("Se recibió un id que no está registrado, ID: " + data["id"])
@@ -46,7 +46,7 @@ def receive_keep_alive():
             return jsonify({"error": "Worker id no registrado"}), 400
         else:
             message = {"message": "Mensaje keep_alive recibido correctamente"}
-            print("Keep-alive recibido de ID: " + data["id"])
+            print("Keep-alive recibido de ID: " + data["id"] + " (Worker " + data["type"] + ")")
         
         for worker in workers_alive:
             if worker["id"]==data["id"]:
@@ -73,10 +73,12 @@ def workers_with_live():
             time_diference = (now - worker["last_keep_alive"]).total_seconds()
             if time_diference >= 10:
                 worker["missed_keep_alives"]+=1
+                print(f"El worker {worker["id"]} no ha enviado keep-alive. Keep-alive perdidos: {worker["missed_keep_alives"]}")
             else:
                 worker["missed_keep_alives"]=0
             if worker["missed_keep_alives"]==3:
                 remove_worker_by_id(worker["id"])
+                print(f"Eliminando el worker {worker["id"]} porque se han perdido 3 keep-alive del mismo")
         if len(workers_alive)<1:
             if (obtener_instancias() == 0):
                 print("LEVANTANDO WORKERS de CPU, ya que no quedan más Workers en la blockchain...")
