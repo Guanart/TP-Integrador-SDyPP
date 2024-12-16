@@ -1,0 +1,39 @@
+{
+    "variables": {
+        "gcloud_account_json": "credentials.json",
+        "gcloud_project_id": "integrador-sdypp"
+    },
+    "builders": [
+        {
+            "type": "googlecompute",
+            "account_file": "{{user `gcloud_account_json`}}",
+            "project_id": "{{user `gcloud_project_id`}}",
+            "region": "us-central1",
+            "zone": "us-central1-b",
+            "source_image_family": "ubuntu-2204-lts",
+            "machine_type": "e2-small",
+            "disk_size": 20,
+            "ssh_username": "packer",
+            "tags": [
+                "docker",
+                "worker"
+            ],
+            "image_name": "worker-pool"
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "shell",
+            "inline": [
+                "sudo apt-get update -y",
+                "sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common",
+                "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/docker.gpg",
+                "sudo add-apt-repository \"deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\"",
+                "sudo apt-get update -y",
+                "sudo apt-get install -y docker-ce docker-ce-cli containerd.io git",
+                "sudo systemctl start docker",
+                "sudo systemctl enable docker"
+            ]
+        }
+    ]
+}

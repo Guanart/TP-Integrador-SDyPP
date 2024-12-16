@@ -1,0 +1,37 @@
+services:
+  rabbitmq:
+    image: "rabbitmq:management"
+    container_name: "rabbitmq"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - my_network
+    volumes:
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+  
+  pool-manager:
+    image: grupo4sdypp2024/tp-integrador-pool-manager:1.0.1
+    container_name: "pool-manager"
+    ports:
+      - "5002:5002"
+    depends_on:
+      - rabbitmq
+    networks:
+      - my_network
+    environment:
+      - PYTHONUNBUFFERED=1
+      - POOL_RABBITMQ_HOST: ${POOL_RABBITMQ_HOST}
+      - POOL_RABBITMQ_PORT: ${POOL_RABBITMQ_PORT}
+      - CONSUME_RABBITMQ_HOST: ${CONSUME_RABBITMQ_HOST}
+      - CONSUME_RABBITMQ_PORT: ${CONSUME_RABBITMQ_PORT}
+      - CONSUME_RABBITMQ_USER: ${CONSUME_RABBITMQ_USER} 
+      - CONSUME_RABBITMQ_PASSWORD: ${CONSUME_RABBITMQ_PASSWORD}
+      - KEEP_ALIVE_SERVER_HOST: ${KEEP_ALIVE_SERVER_HOST}
+      - KEEP_ALIVE_SERVER_PORT: ${KEEP_ALIVE_SERVER_PORT}
+      - COORDINATOR_HOST: ${COORDINATOR_HOST}
+      - COORDINATOR_PORT: ${COORDINATOR_PORT}
+
+networks:
+  my_network:
+    driver: bridge

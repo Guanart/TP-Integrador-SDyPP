@@ -16,6 +16,16 @@ id = -1
 workers_conectados = []
 resuelto = False
 
+POOL_RABBITMQ_HOST = os.environ.get("POOL_RABBITMQ_HOST")
+POOL_RABBITMQ_PORT = os.environ.get("POOL_RABBITMQ_PORT")
+CONSUME_RABBITMQ_HOST = os.environ.get("CONSUME_RABBITMQ_HOST")
+CONSUME_RABBITMQ_PORT = os.environ.get("CONSUME_RABBITMQ_PORT")
+CONSUME_RABBITMQ_USER = os.environ.get("CONSUME_RABBITMQ_USER")
+CONSUME_RABBITMQ_PASSWORD = os.environ.get("CONSUME_RABBITMQ_PASSWORD")
+KEEP_ALIVE_SERVER_HOST = os.environ.get("KEEP_ALIVE_SERVER_HOST")
+KEEP_ALIVE_SERVER_PORT = os.environ.get("KEEP_ALIVE_SERVER_PORT")
+COORDINATOR_HOST = os.environ.get("COORDINATOR_HOST")
+COORDINATOR_PORT = os.environ.get("COORDINATOR_PORT")
 
 def generate_id():
     return uuid.uuid4()
@@ -106,7 +116,7 @@ def divisor_task(ch, method, properties, body):
 
 # Cuando un worker responde, mandamos su solución al coordinador
 def post_result(data):
-    url = "http://coordinator:5000/solved_task"
+    url = f"http://{COORDINATOR_HOST}:{COORDINATOR_PORT}/solved_task"
     try:
         response = requests.post(url, json=data)
         print("Post response:", response.text)
@@ -127,7 +137,7 @@ def resend_result():
 # Función igual a la de los workers para mandar keep-alive al server (ya que se trata como un worker único)
 def send_keep_alive():
     global id
-    url = "http://keep-alive-server:5001/alive"
+    url = f"http://{KEEP_ALIVE_SERVER_HOST}:{KEEP_ALIVE_SERVER_PORT}/alive"
     data = {
         "id": id,
         "type": "gpu",
@@ -147,7 +157,7 @@ def connect_keep_alive_server():
         "id": id,
         "type": "gpu"
     }
-    url = "http://keep-alive-server:5001/alive"
+    url = f"http://{KEEP_ALIVE_SERVER_HOST}:{KEEP_ALIVE_SERVER_PORT}/alive"
     registered_coordinator = False
     while not registered_coordinator:
         try:
@@ -168,12 +178,10 @@ def connect_keep_alive_server():
 
 def main():
     # Configuración de RabbitMQ
-    consume_rabbitmq_host = os.environ.get("RABBITMQ_HOST")
-    consume_rabbitmq_port = os.environ.get("RABBITMQ_PORT")
     consume_connected_rabbit = False
     while not consume_connected_rabbit:
         try:
-            consume_connection = pika.BlockingConnection(pika.ConnectionParameters(host=consume_rabbitmq_host, port=consume_rabbitmq_port, credentials=pika.PlainCredentials('guest', 'guest'), heartbeat=0))
+            consume_connection = pika.BlockingConnection(pika.ConnectionParameters(host=CONSUME_RABBITMQ_HOST, port=CONSUME_RABBITMQ_PORT, credentials=pika.PlainCredentials(CONSUME_RABBITMQ_USER, CONSUME_RABBITMQ_PASSWORD), heartbeat=0))
             consume_channel = consume_connection.channel()
             consume_channel.exchange_declare(exchange='blockchain_challenge', exchange_type='topic', durable=True)
             result = consume_channel.queue_declare('', exclusive=True)
@@ -196,14 +204,12 @@ def main():
         print("Connection closed.")
 
 if __name__ == "__main__": 
-    # CONECTARSE AL RABBIT MQ DONDE SE PUBLICAN LAS TASKS PARA LOS WORKERS (rabbit del pool de workers):
-    rabbitmq_host = os.environ.get("POOL_RABBITMQ_HOST")
-    rabbitmq_port = os.environ.get("POOL_RABBITMQ_PORT")
+    # CONECTARSE AL RABBITMQ DONDE SE PUBLICAN LAS TASKS PARA LOS WORKERS (rabbit del pool de workers):
     rabbitmq_exchange = 'blockchain_challenge'
     connected_rabbit = False
     while not connected_rabbit:
         try:
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host, port=rabbitmq_port, credentials=pika.PlainCredentials('guest', 'guest'), heartbeat=0))
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host=POOL_RABBITMQ_HOST, port=POOL_RABBITMQ_PORT, credentials=pika.PlainCredentials('guest', 'guest'), heartbeat=0))
             channel = connection.channel()
             channel.exchange_declare(exchange=rabbitmq_exchange, exchange_type='topic', durable=True)
             connected_rabbit = True

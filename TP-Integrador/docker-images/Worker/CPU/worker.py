@@ -11,6 +11,7 @@ coordinador_ip = os.environ.get("COORDINATOR_HOST")
 coordinador_puerto = os.environ.get("COORDINATOR_PORT")
 keep_alive_server_ip = os.environ.get("KEEPALIVE_HOST")
 keep_alive_server_puerto = os.environ.get("KEEPALIVE_PORT")
+ES_WORKER_POOL = os.environ.get("ES_WORKER_POOL")
 
 def calcular_hash(texto):
     hash = hashlib.md5()
@@ -113,7 +114,8 @@ def main():
             channel.exchange_declare(exchange='blockchain_challenge', exchange_type='topic', durable=True)
             result = channel.queue_declare('', exclusive=True)
             queue_name = result.method.queue
-            channel.queue_bind(exchange='blockchain_challenge', queue=queue_name, routing_key='tasks')
+            routing_key = f'{id}' if ES_WORKER_POOL == 'true' else 'tasks'
+            channel.queue_bind(exchange='blockchain_challenge', queue=queue_name, routing_key=routing_key)
             connected_rabbit = True
             print("Ya se encuentra conectado a RabbitMQ!")
         except Exception as e:
