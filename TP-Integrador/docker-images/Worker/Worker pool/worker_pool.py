@@ -143,13 +143,35 @@ def divisor_task(ch, method, properties, body):
             print(f"Datos serializados: {body}")
 
             # Publicar el mensaje
-            try:
-                print(f"Publicando mensaje al exchange 'blockchain_challenge' con routing key '{worker['id']}'")
-                channel.basic_publish(exchange='blockchain_challenge', routing_key=f'{worker["id"]}', body=body)
-                print("Mensaje publicado exitosamente")
-            except Exception as e:
-                print(f"Error al publicar el mensaje: {e}")
+            while True:
+                try:
+                    print(f"Publicando mensaje al exchange 'blockchain_challenge' con routing key '{worker['id']}'")
+                    channel.basic_publish(exchange='blockchain_challenge', routing_key=f'{worker["id"]}', body=body)
+                    print("Mensaje publicado exitosamente")
+                    break  # Salir del bucle si el mensaje se publica exitosamente
+                except Exception as e:
+                    print(f"Error al publicar el mensaje: {e}")
+                    reconnect_rabbitmq()
+                    print("Reintentando publicar el mensaje...")
+                    
             start = end + 1
+
+def reconnect_rabbitmq():
+    global channel
+    global connection
+    global rabbitmq_exchange
+    connected_rabbit = False
+    while not connected_rabbit:
+        try:
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host=POOL_RABBITMQ_HOST, port=POOL_RABBITMQ_PORT, credentials=pika.PlainCredentials(POOL_RABBITMQ_USER, POOL_RABBITMQ_PASSWORD), heartbeat=3600))
+            channel = connection.channel()
+            channel.exchange_declare(exchange=rabbitmq_exchange, exchange_type='topic', durable=True)
+            connected_rabbit = True
+            print("Reconectado a RabbitMQ (worker-pool)!")
+        except Exception as e:
+            print(f"Error al reconectar con RabbitMQ (worker-pool): {e}")
+            print("Reintentando en 3 segundos...")
+            time.sleep(3)
 
 # Cuando un worker responde, mandamos su solución al coordinador
 def post_result(data):
@@ -249,20 +271,8 @@ def main():
 if __name__ == "__main__": 
     # CONECTARSE AL RABBITMQ DONDE SE PUBLICAN LAS TASKS PARA LOS WORKERS (rabbit del pool de workers):
     rabbitmq_exchange = 'blockchain_challenge'
-    connected_rabbit = False
-    while not connected_rabbit:
-        try:
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host=POOL_RABBITMQ_HOST, port=POOL_RABBITMQ_PORT, credentials=pika.PlainCredentials(POOL_RABBITMQ_USER, POOL_RABBITMQ_PASSWORD), heartbeat=3600))
-            channel = connection.channel()
-            channel.exchange_declare(exchange=rabbitmq_exchange, exchange_type='topic', durable=True)
-            connected_rabbit = True
-            print("Conectado a RabbitMQ (worker-pool)!")
-        except Exception as e:
-            print (e)
-            print(f"Error al conectar con RabbitMQ (worker-pool): {e}")
-            print("Reintentando en 3 segundos...")
-            time.sleep(3)
-
+    reconnect_rabbitmq()
+    
     # CONECTARSE AL KEEP ALIVE SERVER DE LA BLOCKCHAIN:
     connect_keep_alive_server()
 
