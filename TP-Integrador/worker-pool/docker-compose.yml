@@ -7,21 +7,19 @@ services:
       - "15672:15672"
     networks:
       - my_network
-    volumes:
-      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+    # volumes:
+    #   - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
     command: >
           sh -c "
           rabbitmq-server &
-          sleep 10 &&
-          rabbitmqctl add_vhost / &&
+          while ! rabbitmqctl status; do sleep 1; done &&
           rabbitmqctl add_user user password &&
           rabbitmqctl set_user_tags user user &&
           rabbitmqctl set_permissions -p / user '.*' '.*' '.*' &&
           rabbitmqctl add_user admin admin &&
           rabbitmqctl set_user_tags admin administrator &&
           rabbitmqctl set_permissions -p / admin '.*' '.*' '.*' &&
-          rabbitmqctl stop &&
-          rabbitmq-server
+          rabbitmqctl stop && rabbitmq-server
           "
   
   pool-manager:
