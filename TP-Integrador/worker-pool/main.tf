@@ -5,7 +5,7 @@ resource "google_compute_instance" "worker_pool_manager" {
 
   boot_disk {
     initialize_params {
-      image = "ubuntu-os-cloud/ubuntu-2004-lts"
+      image = "projects/integrador-sdypp/global/images/worker-pool"
     }
   }
 
@@ -17,12 +17,12 @@ resource "google_compute_instance" "worker_pool_manager" {
   metadata_startup_script = <<-EOT
     #!/bin/bash
     git clone https://github.com/Guanart/SDyPP-2024-grupo-4.git
-    echo "${var.metadata_startup_script}" > /home/packer/SDyPP-2024-grupo-4/TP-Integrador/docker-compose-worker-pool/.env
+    echo "${var.env}" > /home/packer/SDyPP-2024-grupo-4/TP-Integrador/docker-compose-worker-pool/.env
     cd /home/packer/SDyPP-2024-grupo-4/TP-Integrador/docker-compose-worker-pool
     docker compose up -d
   EOT
 }
 
-variable "metadata_startup_script" {
+variable "env" {
   type    = string
 }
