@@ -22,3 +22,7 @@ resource "google_compute_instance" "worker_pool_manager" {
     docker compose up -d
   EOT
 }
+
+variable "metadata_startup_script" {
+  type    = string
+}
