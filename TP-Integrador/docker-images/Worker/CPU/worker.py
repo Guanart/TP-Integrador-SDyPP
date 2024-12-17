@@ -114,7 +114,8 @@ def main():
             channel.exchange_declare(exchange='blockchain_challenge', exchange_type='topic', durable=True)
             result = channel.queue_declare('', exclusive=True)
             queue_name = result.method.queue
-            routing_key = f'{id}' if ES_WORKER_POOL == 'true' else 'tasks'
+            routing_key = f'{id}' if ES_WORKER_POOL else 'tasks'
+            print(f"Bindeando queue con Routing key: {routing_key}")
             channel.queue_bind(exchange='blockchain_challenge', queue=queue_name, routing_key=routing_key)
             connected_rabbit = True
             print("Ya se encuentra conectado a RabbitMQ!")
