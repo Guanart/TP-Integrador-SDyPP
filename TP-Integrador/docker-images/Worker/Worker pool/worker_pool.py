@@ -216,7 +216,7 @@ def main():
     while True:
         try:
             # Crear nueva conexión y canal
-            connection = pika.BlockingConnection(
+            consume_connection = pika.BlockingConnection(
                 pika.ConnectionParameters(
                     host=CONSUME_RABBITMQ_HOST,
                     port=CONSUME_RABBITMQ_PORT,
@@ -224,36 +224,25 @@ def main():
                     heartbeat=3600
                 )
             )
-            channel = connection.channel()
-            channel.exchange_declare(exchange='blockchain_challenge', exchange_type='topic', durable=True)
-            result = channel.queue_declare('', exclusive=True)
+            consume_channel = consume_connection.channel()
+            consume_channel.exchange_declare(exchange='blockchain_challenge', exchange_type='topic', durable=True)
+            result = consume_channel.queue_declare('', exclusive=True)
             queue_name = result.method.queue
-            channel.queue_bind(exchange='blockchain_challenge', queue=queue_name, routing_key='tasks')
+            consume_channel.queue_bind(exchange='blockchain_challenge', queue=queue_name, routing_key='tasks')
 
             print("Conectado a RabbitMQ. Esperando mensajes...")
-            channel.basic_consume(queue=queue_name, on_message_callback=divisor_task, auto_ack=False)
-            channel.start_consuming()
+            consume_channel.basic_consume(queue=queue_name, on_message_callback=divisor_task, auto_ack=False)
+            consume_channel.start_consuming()
 
         except KeyboardInterrupt:
             print("Consumption stopped by user.")
-            if 'connection' in locals() and connection.is_open:
-                connection.close()
+            consume_connection.close()
             break
 
         except (pika.exceptions.AMQPConnectionError, pika.exceptions.StreamLostError) as e:
             print(f"Error de conexión: {e}. Reintentando en 5 segundos...")
             time.sleep(5)
 
-
-
-# def conectar_rabbit(consume_channel, consume_connection):
-#     consume_connection = pika.BlockingConnection(pika.ConnectionParameters(host=CONSUME_RABBITMQ_HOST, port=CONSUME_RABBITMQ_PORT, credentials=pika.PlainCredentials(CONSUME_RABBITMQ_USER, CONSUME_RABBITMQ_PASSWORD), heartbeat=3600))
-#     consume_channel = consume_connection.channel()
-#     consume_channel.exchange_declare(exchange='blockchain_challenge', exchange_type='topic', durable=True)
-#     result = consume_channel.queue_declare('', exclusive=True)
-#     consume_queue_name = result.method.queue
-#     consume_channel.queue_bind(exchange='blockchain_challenge', queue=consume_queue_name, routing_key='tasks')
-#     consume_connected_rabbit = True
 
 if __name__ == "__main__": 
     # CONECTARSE AL RABBITMQ DONDE SE PUBLICAN LAS TASKS PARA LOS WORKERS (rabbit del pool de workers):
