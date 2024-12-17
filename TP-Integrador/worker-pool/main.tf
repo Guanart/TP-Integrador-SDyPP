@@ -18,8 +18,8 @@ resource "google_compute_instance" "worker_pool_manager" {
     #!/bin/bash
     cd /home/packer
     sudo git clone https://github.com/Guanart/SDyPP-2024-grupo-4.git
-    sudo echo "${var.env}" > /home/packer/SDyPP-2024-grupo-4/TP-Integrador/docker-compose-worker-pool/.env
-    cd /home/packer/SDyPP-2024-grupo-4/TP-Integrador/docker-compose-worker-pool
+    cd /home/packer/SDyPP-2024-grupo-4/TP-Integrador/worker-pool
+    sudo echo "${var.env}" > .env
     sudo docker compose up -d
   EOT
 }
