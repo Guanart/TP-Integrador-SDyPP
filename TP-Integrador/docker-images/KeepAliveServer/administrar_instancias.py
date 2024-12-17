@@ -63,7 +63,7 @@ def crear_instancias(cantidad):
                         -e COORDINATOR_PORT={coordinador_puerto} \
                         -e KEEPALIVE_HOST={keep_alive_server_ip} \
                         -e KEEPALIVE_PORT={keep_alive_server_puerto} \
-                        grupo4sdypp2024/tp-integrador-cpu-worker:1.0.1"""
+                        grupo4sdypp2024/tp-integrador-cpu-worker:1.0.2"""
                     }
                 ]
             }
