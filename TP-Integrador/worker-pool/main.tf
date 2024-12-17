@@ -16,10 +16,11 @@ resource "google_compute_instance" "worker_pool_manager" {
 
   metadata_startup_script = <<-EOT
     #!/bin/bash
-    git clone https://github.com/Guanart/SDyPP-2024-grupo-4.git
-    echo "${var.env}" > /home/packer/SDyPP-2024-grupo-4/TP-Integrador/docker-compose-worker-pool/.env
+    cd /home/packer
+    sudo git clone https://github.com/Guanart/SDyPP-2024-grupo-4.git
+    sudo echo "${var.env}" > /home/packer/SDyPP-2024-grupo-4/TP-Integrador/docker-compose-worker-pool/.env
     cd /home/packer/SDyPP-2024-grupo-4/TP-Integrador/docker-compose-worker-pool
-    docker compose up -d
+    sudo docker compose up -d
   EOT
 }
 
