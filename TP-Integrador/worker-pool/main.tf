@@ -1,6 +1,6 @@
 resource "google_compute_instance" "worker_pool_manager" {
   name         = "worker-pool-manager"
-  machine_type = "e2-small"
+  machine_type = "e2-standard-2"
   zone         = "us-central1-a"
 
   boot_disk {
