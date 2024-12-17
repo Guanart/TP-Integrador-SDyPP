@@ -52,6 +52,7 @@ def receive_keep_alive():
                 'missed_keep_alives': 0
             })
             message = {"message": "Worker registrado correctamente.", "id": id_generado}
+            print("Worker registrado correctamente. ID: ", id_generado)
         elif (data["id"] != -1) and all(worker_registered["id"] != data["id"] for worker_registered in workers_conectados):
             return jsonify({"error": "Worker id no registrado"}), 400
         else:
@@ -81,7 +82,7 @@ def workers_with_live():
             else:
                 worker["missed_keep_alives"]=0
             if worker["missed_keep_alives"]==3:
-                remove_worker_by_id(worker["id"])
+                remove_worker_by_id(worker["id"])        
         time.sleep(10)
 
 # Función al consumir una tarea:
@@ -107,12 +108,13 @@ def divisor_task(ch, method, properties, body):
         remainder = num_max % num_workers
         start = data["num_min"]
         
-
+        print("Workers conectados al pool que recibirán la tarea: "+workers_conectados)
         for i in range(len(workers_conectados)):
             worker = workers_conectados[i]
             end = start + range_size + (remainder if i == len(workers_conectados)-1 else 0)
             data["num_min"] = start
             data["num_max"] = end
+            print(f"Enviando tarea al worker {worker['id']} con rango {start} - {end}")
             channel.basic_publish(exchange='blockchain_challenge', routing_key=f'{worker["id"]}', body=json.dumps(data))
             start = end + 1
 
@@ -121,7 +123,8 @@ def post_result(data):
     url = f"http://{COORDINATOR_HOST}:{COORDINATOR_PORT}/solved_task"
     try:
         response = requests.post(url, json=data)
-        print("Post response:", response.text)
+        print("Un worker ha resuelto la tarea.")
+        print("Post response: ", response.text)
     except requests.exceptions.RequestException as e:
         print("Failed to send POST request:", e)
 
