@@ -31,5 +31,5 @@ variable "env" {
 
 variable "worker_count" {
   type    = number
-  default = 3
+  default = 2
 }

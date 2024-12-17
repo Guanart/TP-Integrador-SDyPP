@@ -89,6 +89,7 @@ def workers_with_live():
 def divisor_task(ch, method, properties, body):
     global workers_conectados
     global resuelto
+    global channel
 
     resuelto = False
     data = json.loads(body)
@@ -108,14 +109,46 @@ def divisor_task(ch, method, properties, body):
         remainder = num_max % num_workers
         start = data["num_min"]
         
-        print("Workers conectados al pool que recibirán la tarea: "+workers_conectados)
+        print("Workers conectados al pool que recibirán la tarea: "+str(workers_conectados))
         for i in range(len(workers_conectados)):
             worker = workers_conectados[i]
             end = start + range_size + (remainder if i == len(workers_conectados)-1 else 0)
             data["num_min"] = start
             data["num_max"] = end
-            print(f"Enviando tarea al worker {worker['id']} con rango {start} - {end}")
-            channel.basic_publish(exchange='blockchain_challenge', routing_key=f'{worker["id"]}', body=json.dumps(data))
+            # print(f"Enviando tarea al worker {worker['id']} con rango {start} - {end}")
+
+            # channel.basic_publish(exchange='blockchain_challenge', routing_key=f'{worker["id"]}', body=json.dumps(data))
+            # start = end + 1
+
+            # Verificar que `channel` esté inicializado y abierto
+            if channel is None or not channel.is_open:
+                raise ValueError("El canal no está inicializado o está cerrado")
+            print(f"Canal está abierto: {channel.is_open}")
+
+            # Verificar que `worker` sea un diccionario y contenga la clave "id"
+            if not isinstance(worker, dict) or "id" not in worker:
+                raise ValueError("El objeto worker no es un diccionario o no contiene la clave 'id'")
+            print(f"Worker: {worker}")
+
+            # Verificar que `worker["id"]` no sea None o una cadena vacía
+            if worker["id"] is None or worker["id"] == "":
+                raise ValueError("El id del worker es None o una cadena vacía")
+            print(f"Worker ID: {worker['id']}")
+
+            # Verificar que `data` sea serializable a JSON
+            try:
+                body = json.dumps(data)
+            except (TypeError, ValueError) as e:
+                raise ValueError(f"Error al serializar data a JSON: {e}")
+            print(f"Datos serializados: {body}")
+
+            # Publicar el mensaje
+            try:
+                print(f"Publicando mensaje al exchange 'blockchain_challenge' con routing key '{worker['id']}'")
+                channel.basic_publish(exchange='blockchain_challenge', routing_key=f'{worker["id"]}', body=body)
+                print("Mensaje publicado exitosamente")
+            except Exception as e:
+                print(f"Error al publicar el mensaje: {e}")
             start = end + 1
 
 # Cuando un worker responde, mandamos su solución al coordinador
