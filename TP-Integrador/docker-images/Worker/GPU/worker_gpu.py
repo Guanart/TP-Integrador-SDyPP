@@ -121,12 +121,18 @@ def main():
 
         except KeyboardInterrupt:
             print("Consumption stopped by user.")
-            connection.close()
+            #connection.close()
             break
             
         except (pika.exceptions.AMQPConnectionError, pika.exceptions.StreamLostError) as e:
             print(f"Error de conexión: {e}. Reintentando en 5 segundos...")
             time.sleep(5)
+
+        finally:
+            # Asegurarse de cerrar la conexión si está abierta
+            if 'connection' in locals() and connection.is_open:
+                connection.close()
+
 
 if __name__ == '__main__':
     # CONECTARSE AL KEEP ALIVE SERVER DE LA BLOCKCHAIN:
