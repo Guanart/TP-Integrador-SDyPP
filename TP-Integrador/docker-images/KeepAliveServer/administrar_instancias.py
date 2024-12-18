@@ -21,7 +21,7 @@ def crear_instancias(cantidad):
     INSTANCE_NAME_PREFIX = 'workercpu'
     MACHINE_TYPE = f'zones/{ZONE}/machineTypes/e2-small' 
     SUBNETWORK = f'projects/{PROJECT_ID}/regions/us-central1/subnetworks/default'
-    SOURCE_IMAGE = f'projects/{PROJECT_ID}/global/images/packer-1734059877' 
+    SOURCE_IMAGE = f'projects/{PROJECT_ID}/global/images/worker-cpu' 
     NETWORK_INTERFACE = {
         'subnetwork': SUBNETWORK,
         'access_configs': [
@@ -63,7 +63,7 @@ def crear_instancias(cantidad):
                         -e COORDINATOR_PORT={coordinador_puerto} \
                         -e KEEPALIVE_HOST={keep_alive_server_ip} \
                         -e KEEPALIVE_PORT={keep_alive_server_puerto} \
-                        grupo4sdypp2024/tp-integrador-cpu-worker:1.0.2"""
+                        grupo4sdypp2024/tp-integrador-cpu-worker:1.0.3"""
                     }
                 ]
             }

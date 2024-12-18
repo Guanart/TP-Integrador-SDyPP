@@ -7,10 +7,14 @@ import time
 import threading
 
 id = -1
-coordinador_ip = os.environ.get("COORDINATOR_HOST")
-coordinador_puerto = os.environ.get("COORDINATOR_PORT")
-keep_alive_server_ip = os.environ.get("KEEPALIVE_HOST")
-keep_alive_server_puerto = os.environ.get("KEEPALIVE_PORT")
+RABBITMQ_USER = os.environ.get("RABBITMQ_USER")
+RABBITMQ_PASSWORD = os.environ.get("RABBITMQ_PASSWORD")
+RABBITMQ_HOST = os.environ.get("RABBITMQ_HOST")
+RABBITMQ_PORT = os.environ.get("RABBITMQ_PORT")
+COORDINATOR_HOST = os.environ.get("COORDINATOR_HOST")
+COORDINATOR_PORT = os.environ.get("COORDINATOR_PORT")
+KEEPALIVE_HOST = os.environ.get("KEEPALIVE_HOST")
+KEEPALIVE_PORT = os.environ.get("KEEPALIVE_PORT")
 ES_WORKER_POOL = os.environ.get("ES_WORKER_POOL")
 
 def calcular_hash(texto):
@@ -19,7 +23,7 @@ def calcular_hash(texto):
     return hash.hexdigest()
 
 def post_result(data):
-    url = f"http://{coordinador_ip}:{coordinador_puerto}/solved_task"
+    url = f"http://{COORDINATOR_HOST}:{COORDINATOR_PORT}/solved_task"
     try:
         response = requests.post(url, json=data)
         print("Post response:", response.text)
@@ -41,6 +45,7 @@ def on_message_received(ch, method, properties, body):
     encontrado = False
     start_time = time.time()
     print("Starting mining process...")
+    
     count = 0
     while not encontrado and count<=data["num_max"]:
         number = str(count)
@@ -62,7 +67,7 @@ def on_message_received(ch, method, properties, body):
 
 def send_keep_alive():
     global id
-    url = f"http://{keep_alive_server_ip}:{keep_alive_server_puerto}/alive"
+    url = f"http://{KEEPALIVE_HOST}:{KEEPALIVE_PORT}/alive"
     data = {
         "id": id,
         "type": "cpu"
@@ -76,13 +81,13 @@ def send_keep_alive():
         except requests.exceptions.RequestException as e:
             print("Fallo al hacer POST al keep-alive-server:", e)
 
-def main():
+def connect_keep_alive_server():
     global id
     data = {
         "id": id,
         "type": "cpu"
     }
-    url = f"http://{keep_alive_server_ip}:{keep_alive_server_puerto}/alive"
+    url = f"http://{KEEPALIVE_HOST}:{KEEPALIVE_PORT}/alive"
     registered_coordinator = False
     while not registered_coordinator:
         try:
@@ -99,17 +104,18 @@ def main():
         except requests.exceptions.RequestException as e:
             print("Failed to send POST request:", e)
     threading.Thread(target=send_keep_alive, daemon=True).start()
-    
 
-    # Configuración de RabbitMQ
-    user = os.environ.get("RABBITMQ_USER")
-    password = os.environ.get("RABBITMQ_PASSWORD")
-    rabbitmq_host = os.environ.get("RABBITMQ_HOST")
-    rabbitmq_port = os.environ.get("RABBITMQ_PORT")
-    connected_rabbit = False
-    while not connected_rabbit:
+def main():
+    while True:
         try:
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host, port=rabbitmq_port, credentials=pika.PlainCredentials(f'{user}', f'{password}'), heartbeat=0))
+            connection = pika.BlockingConnection(
+                pika.ConnectionParameters(
+                    host=RABBITMQ_HOST, 
+                    port=RABBITMQ_PORT, 
+                    credentials=pika.PlainCredentials(f'{RABBITMQ_USER}', f'{RABBITMQ_PASSWORD}'), 
+                    heartbeat=0
+                )
+            )
             channel = connection.channel()
             channel.exchange_declare(exchange='blockchain_challenge', exchange_type='topic', durable=True)
             result = channel.queue_declare('', exclusive=True)
@@ -117,21 +123,23 @@ def main():
             routing_key = f'{id}' if ES_WORKER_POOL else 'tasks'
             print(f"Bindeando queue con Routing key: {routing_key}")
             channel.queue_bind(exchange='blockchain_challenge', queue=queue_name, routing_key=routing_key)
-            connected_rabbit = True
-            print("Ya se encuentra conectado a RabbitMQ!")
-        except Exception as e:
-            print(f"Error connectando a RabbitMQ: {e}")
-            print("Reintentando en 3 segundos...")
-            time.sleep(3)
-    
-    channel.basic_consume(queue=queue_name, on_message_callback=on_message_received, auto_ack=False)
-    print('Worker listo para consumir. Esperando tasks...')
-    try:
-        channel.start_consuming()
-    except KeyboardInterrupt:
-        print("Consumption stopped by user.")
-        connection.close()
-        print("Connection closed.")
+
+            print("Conectado a RabbitMQ. Esperando mensajes...")
+            channel.basic_consume(queue=queue_name, on_message_callback=on_message_received, auto_ack=False)
+            channel.start_consuming()
+
+        except KeyboardInterrupt:
+            print("Consumption stopped by user.")
+            connection.close()
+            break
+
+        except (pika.exceptions.AMQPConnectionError, pika.exceptions.StreamLostError) as e:
+            print(f"Error de conexión: {e}. Reintentando en 5 segundos...")
+            time.sleep(5)
 
 if __name__ == '__main__':
-    main()
+    # CONECTARSE AL KEEP ALIVE SERVER DE LA BLOCKCHAIN:
+    connect_keep_alive_server()
+
+    # CONECTARSE A RABBIT DE BLOCKCHAIN Y EMPEZAR A CONSUMIR:
+    threading.Thread(target=main).start()

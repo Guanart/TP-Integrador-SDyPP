@@ -6,7 +6,7 @@ resource "google_compute_instance" "worker_cpu" {
 
   boot_disk {
     initialize_params {
-      image = "projects/integrador-sdypp/global/images/packer-1734059877"
+      image = "projects/integrador-sdypp/global/images/worker-cpu"
     }
   }
 
@@ -23,7 +23,7 @@ resource "google_compute_instance" "worker_cpu" {
     docker run -p 5000:5000 \
       --name worker-cpu \
       --env-file .env \
-      grupo4sdypp2024/tp-integrador-cpu-worker:1.0.2
+      grupo4sdypp2024/tp-integrador-cpu-worker:1.0.3
   EOT
 }
 

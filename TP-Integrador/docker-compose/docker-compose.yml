@@ -55,7 +55,7 @@ services:
   #     - PYTHONUNBUFFERED=1
   
   worker-1:
-    image: grupo4sdypp2024/tp-integrador-cpu-worker:1.0.2
+    image: grupo4sdypp2024/tp-integrador-cpu-worker:1.0.3
     container_name: "worker-1"
     depends_on:
       - coordinator

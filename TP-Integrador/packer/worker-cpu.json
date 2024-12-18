@@ -17,7 +17,7 @@
       "tags": ["spot-instance", "docker", "worker"],
       "preemptible": true,
       "on_host_maintenance": "TERMINATE",
-      "image_name": "packer-1734059877"
+      "image_name": "worker-cpu"
     }
   ],
   "provisioners": [
@@ -32,7 +32,7 @@
         "sudo apt-get install -y docker-ce docker-ce-cli containerd.io",
         "sudo systemctl start docker",
         "sudo systemctl enable docker",
-        "sudo docker pull grupo4sdypp2024/tp-integrador-cpu-worker:1.0.2"
+        "sudo docker pull grupo4sdypp2024/tp-integrador-cpu-worker:1.0.3"
       ]
     }
   ]
