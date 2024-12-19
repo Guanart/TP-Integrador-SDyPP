@@ -135,7 +135,7 @@ def task_building():
     global last_id
 
     # Comprobar estar conectado Redis y RabbitMQ
-    while connect_redis(redis_client) and connect_rabbitmq(connect_rabbitmq):
+    while connect_redis() and connect_rabbitmq():
         print("Comprobando si hay transacciones para generar task...")
         print()
         # Obtener último bloque de la blockchain
@@ -300,6 +300,6 @@ def connect_rabbitmq():
 
 # INICIO DE LA APLICACIÓN
 if __name__ == "__main__":
-    if connect_redis(redis_client) and connect_rabbitmq(connection_rabbit):
+    if connect_redis() and connect_rabbitmq():
         threading.Thread(target=task_building).start()
         app.run(host="0.0.0.0", port=5000)
