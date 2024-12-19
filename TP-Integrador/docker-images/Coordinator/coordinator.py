@@ -203,7 +203,7 @@ def seccion_critica(data):
     
     with lock:
         # Verificar si el bloque ya existe
-        block_id = block["id"]
+        block_id = data.get("id")
         if redis_utils.exists_id(block_id):
             return jsonify({'error': 'El bloque ya existe.'}), 400
         # Obtener el ultimo hash de la blockchain
