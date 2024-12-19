@@ -43,7 +43,7 @@ class RedisUtils:
     def delete_task(self, clave):
         return self.redis_client.delete(clave)
     
-    def post_var(self, clave, valor):
+    def set_var(self, clave, valor):
         valor_json = json.dumps(valor)
         return self.redis_client.set(clave, valor_json)
     
