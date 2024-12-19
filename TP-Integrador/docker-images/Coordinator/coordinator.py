@@ -178,7 +178,7 @@ def task_building():
                         print()
                         last_task["prefix"] = prefix
                         redis_utils.set_var("last_task", last_task) # Guardar en Redis la ultima tarea
-                repostear_task()
+                    repostear_task()
                 time.sleep(30)
                 continue # Vuelvo a ejecutar el bucle, sin pasar por postear_task
             
