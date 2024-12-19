@@ -23,7 +23,7 @@ services:
           "
   
   pool-manager:
-    image: grupo4sdypp2024/tp-integrador-pool-manager:1.0.9
+    image: grupo4sdypp2024/tp-integrador-pool-manager:1.1.0
     container_name: "pool-manager"
     ports:
       - "5002:5002"
