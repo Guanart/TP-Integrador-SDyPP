@@ -25,7 +25,7 @@ def post_result(data):
     except requests.exceptions.RequestException as e:
         print("Failed to send POST request:", e)
 
-def minero(ch, method, properties, body):
+def pepe(ch, method, properties, body):
     data = json.loads(body)
     print(f"Tarea recibida")
     '''
@@ -94,9 +94,18 @@ def connect_keep_alive_server():
                 time.sleep(3)
         except requests.exceptions.RequestException as e:
             print("Failed to send POST request:", e)
+    threading.Thread(target=send_keep_alive, daemon=True).start()
+    
+
+def on_message_received(ch, method, properties, body):
+    print(f"Mensaje recibido: {body}")
+    # Procesa el mensaje aquí
+    ch.basic_ack(delivery_tag=method.delivery_tag)
 
 def main():
     while True:
+        print("Ciclo while")
+        print()
         try:
             connection = pika.BlockingConnection(
                 pika.ConnectionParameters(
@@ -110,17 +119,26 @@ def main():
             channel.exchange_declare(exchange='blockchain_challenge', exchange_type='topic', durable=True)
             result = channel.queue_declare('', exclusive=True)
             queue_name = result.method.queue
-            routing_key = f'{id}' if ES_WORKER_POOL else 'tasks'
+            #routing_key = f'{id}' if ES_WORKER_POOL else 'tasks'
             routing_key = 'tasks'
-            print(f"Bindeando queue con Routing key: {routing_key}")
             channel.queue_bind(exchange='blockchain_challenge', queue=queue_name, routing_key=routing_key)
-
-            print("Conectado a RabbitMQ. Esperando mensajes...")
-            channel.basic_consume(queue=queue_name, on_message_callback=minero, auto_ack=False)
+            print(f"Bindeando queue con Routing key: {routing_key}")
+            channel.basic_consume(queue=queue_name, on_message_callback=on_message_received, auto_ack=False)
+            print("PASÉ BASIC CONSUME")
             channel.start_consuming()
+            print("Conectado a RabbitMQ. Esperando mensajes...")
+
+        except KeyboardInterrupt:
+            print("Consumption stopped by user.")
+            connection.close()
+            break
 
         except (pika.exceptions.AMQPConnectionError, pika.exceptions.StreamLostError) as e:
             print(f"Error de conexión: {e}. Reintentando en 5 segundos...")
+            time.sleep(5)
+
+        except Exception as e:
+            print(f"Error desconocido: {e}. Reintentando en 5 segundos...")
             time.sleep(5)
 
 
@@ -129,10 +147,5 @@ if __name__ == '__main__':
     # CONECTARSE AL KEEP ALIVE SERVER DE LA BLOCKCHAIN:
     connect_keep_alive_server()
 
-    #INICIAR THREAD DE KEEP ALIVE:
-    send_keep_alive_thread = threading.Thread(target=send_keep_alive)
-    send_keep_alive_thread.start()
-
-    #INICIAR THREAD DE CONSUMO DE RABBITMQ:
-    consume_rabbitmq_thread = threading.Thread(target=main)
-    consume_rabbitmq_thread.start()
+    # CONECTARSE A RABBIT DE BLOCKCHAIN Y EMPEZAR A CONSUMIR:
+    threading.Thread(target=main).start()

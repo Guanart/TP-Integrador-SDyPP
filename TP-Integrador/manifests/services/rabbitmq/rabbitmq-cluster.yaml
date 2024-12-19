@@ -15,16 +15,16 @@ metadata:
   namespace: services
 spec:
   replicas: 2
-  persistence:
-    storageClassName: standard
-    storage: 1Gi
-  resources:
-    requests:
-      cpu: 500m
-      memory: 2Gi
-    limits:
-      cpu: 500m
-      memory: 2Gi
+  # persistence:
+  #   storageClassName: standard
+  #   storage: 1Gi
+  # resources:
+  #   requests:
+  #     cpu: 500m
+  #     memory: 2Gi
+  #   limits:
+  #     cpu: 500m
+  #     memory: 2Gi
   # rabbitmq:
   #   additionalConfig: |
   #     heartbeat = 3600
