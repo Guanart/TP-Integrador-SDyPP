@@ -94,7 +94,6 @@ def connect_keep_alive_server():
                 time.sleep(3)
         except requests.exceptions.RequestException as e:
             print("Failed to send POST request:", e)
-    threading.Thread(target=send_keep_alive, daemon=True).start()
 
 def main():
     while True:
@@ -112,6 +111,7 @@ def main():
             result = channel.queue_declare('', exclusive=True)
             queue_name = result.method.queue
             routing_key = f'{id}' if ES_WORKER_POOL else 'tasks'
+            routing_key = 'tasks'
             print(f"Bindeando queue con Routing key: {routing_key}")
             channel.queue_bind(exchange='blockchain_challenge', queue=queue_name, routing_key=routing_key)
 
@@ -119,24 +119,20 @@ def main():
             channel.basic_consume(queue=queue_name, on_message_callback=minero, auto_ack=False)
             channel.start_consuming()
 
-        except KeyboardInterrupt:
-            print("Consumption stopped by user.")
-            #connection.close()
-            break
-            
         except (pika.exceptions.AMQPConnectionError, pika.exceptions.StreamLostError) as e:
             print(f"Error de conexión: {e}. Reintentando en 5 segundos...")
             time.sleep(5)
 
-        finally:
-            # Asegurarse de cerrar la conexión si está abierta
-            if 'connection' in locals() and connection.is_open:
-                connection.close()
 
 
 if __name__ == '__main__':
     # CONECTARSE AL KEEP ALIVE SERVER DE LA BLOCKCHAIN:
     connect_keep_alive_server()
 
-    # CONECTARSE A RABBIT DE BLOCKCHAIN Y EMPEZAR A CONSUMIR:
-    threading.Thread(target=main).start()
+    #INICIAR THREAD DE KEEP ALIVE:
+    send_keep_alive_thread = threading.Thread(target=send_keep_alive)
+    send_keep_alive_thread.start()
+
+    #INICIAR THREAD DE CONSUMO DE RABBITMQ:
+    consume_rabbitmq_thread = threading.Thread(target=main)
+    consume_rabbitmq_thread.start()
