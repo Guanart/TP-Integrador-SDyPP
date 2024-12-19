@@ -10,15 +10,18 @@ import hashlib
 from redis_utils import RedisUtils
 
 app = Flask(__name__)
-prefix = "000"
+# Variables de aplicación
+prefix = None
 last_task = None
-last_id = 0
+last_id = None
+time_challenge_initiate: None
+
 lock = threading.Lock()
 connection_rabbit = None
 channel = None
 redis_client = None
 redis_utils = None
-time_challenge_initiate: datetime = datetime.now(timezone.utc)
+
 
 # FUNCIÓN PARA CALCULAR EL HASH
 def calcular_hash(data):
@@ -99,6 +102,7 @@ def postear_task(last_element):
         # Guardar en Redis la tarea (para conocer la ulima tarea posteada):
         redis_utils.post_task(last_id, task)   
         last_task = task
+        redis_utils.set_var("last_task", last_task) # Guardar en Redis la ultima tarea
         # Postear la tarea en el topic de RabbitMQ
         print("Se va a publicar una tarea para los workers")
         print()
@@ -107,6 +111,7 @@ def postear_task(last_element):
         print()
         # Iniciar el timer
         time_challenge_initiate = datetime.now(timezone.utc)
+        redis_utils.set_var("time_challenge_initiate", time_challenge_initiate.isoformat()) # Guardar en Redis el tiempo de inicio
     else:
         print(f"No hay transacciones por el momento.")
         print()
@@ -141,7 +146,8 @@ def task_building():
         # Obtener último bloque de la blockchain
         last_element = redis_utils.get_latest_element() 
         # Aumentar el last_id con respecto al ID del ultimo bloque de la blockchain
-        last_id = last_element["id"] + 1 if last_element else 0 
+        last_id = last_element["id"] + 1 if last_element else 0
+        redis_utils.set_var("last_id", last_id) # Guardar en Redis el last_id
 
         # Si la ultima tarea que se publicó es igual al ultimo id, significa que ningun worker ha publicado la solución
         if last_task != None and last_task['id'] == last_id:
@@ -150,9 +156,11 @@ def task_building():
             # Si pasaron 5 minutos y todavía nadie respondio, se disminuye el prefijo
             if time_difference >= 300 and len(prefix) > 1:
                 prefix = prefix[:-1]  # Quitar un "0"
+                redis_utils.set_var("prefix", prefix) # Guardar en Redis el prefijo
                 print(f"Ningún worker resolvió la tarea en 5 minutos, disminuyendo dificultad: {prefix}")
                 print()
                 last_task["prefix"] = prefix
+                redis_utils.set_var("last_task", last_task) # Guardar en Redis la ultima tarea
                 # Se repostea la misma tarea que nadie pudo responder, pero con un prefijo menos
                 repostear_task()
             time.sleep(30)
@@ -241,10 +249,12 @@ def seccion_critica(data):
         time_difference = (datetime.now(timezone.utc) - time_challenge_initiate).total_seconds()
         if time_difference > 75 and len(prefix) > 1:
             prefix = prefix[:-1]  # Quitar un "0"
+            redis_utils.set_var("prefix", prefix) # Guardar en Redis el prefijo
             print(f"NUEVO PREFIJO (disminuyo): {prefix}")
             print()
         elif time_difference < 30:
             prefix += "0"
+            redis_utils.set_var("prefix", prefix) # Guardar en Redis el prefijo
             print(f"NUEVO PREFIJO (aumento): {prefix}")
             print()
         # Eliminar la tarea de Redis
@@ -298,8 +308,42 @@ def connect_rabbitmq():
             time.sleep(5)
     return True
 
+def iniciar_variables():
+    global redis_utils
+    global prefix
+    global last_task
+    global last_id
+    global time_challenge_initiate
+
+    # Verificar y establecer 'prefix'
+    prefix = redis_utils.get_var("prefix")
+    if prefix is None:
+        prefix = "000"
+        redis_utils.set_var("prefix", prefix)
+
+    # Verificar y establecer 'last_task'
+    last_task = redis_utils.get_var("last_task")
+    if last_task is None:
+        redis_utils.set_var("last_task", last_task)
+
+    # Verificar y establecer 'last_id'
+    last_id = redis_utils.get_var("last_id")
+    if last_id is None:
+        last_id = 0
+        redis_utils.set_var("last_id", last_id)
+
+    # Verificar y establecer 'time_challenge_initiate'
+    time_challenge_initiate = redis_utils.get_var("time_challenge_initiate")
+    if time_challenge_initiate is None:
+        time_challenge_initiate = datetime.now(timezone.utc)
+        redis_utils.set_var("time_challenge_initiate", time_challenge_initiate.isoformat())
+    else:
+        time_challenge_initiate = datetime.fromisoformat(time_challenge_initiate)
+        
 # INICIO DE LA APLICACIÓN
 if __name__ == "__main__":
     if connect_redis() and connect_rabbitmq():
+        # Obtener variables de Redis
+        iniciar_variables()
         threading.Thread(target=task_building).start()
         app.run(host="0.0.0.0", port=5000)

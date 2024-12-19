@@ -42,5 +42,15 @@ class RedisUtils:
 
     def delete_task(self, clave):
         return self.redis_client.delete(clave)
+    
+    def post_var(self, clave, valor):
+        valor_json = json.dumps(valor)
+        return self.redis_client.set(clave, valor_json)
+    
+    def get_var(self, clave):
+        valor_json = self.redis_client.get(clave)
+        if valor_json is None:
+            return None
+        return json.loads(valor_json)
 
 # The module can be used after import by creating an instance of RedisUtils
