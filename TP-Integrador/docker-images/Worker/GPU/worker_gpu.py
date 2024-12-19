@@ -16,6 +16,7 @@ COORDINATOR_PORT = os.environ.get("COORDINATOR_PORT")
 KEEPALIVE_HOST = os.environ.get("KEEPALIVE_HOST")
 KEEPALIVE_PORT = os.environ.get("KEEPALIVE_PORT")
 ES_WORKER_POOL = os.environ.get("ES_WORKER_POOL")
+connection = None
 
 def post_result(data):
     url = f"http://{COORDINATOR_HOST}:{COORDINATOR_PORT}/solved_task"
@@ -25,7 +26,7 @@ def post_result(data):
     except requests.exceptions.RequestException as e:
         print("Failed to send POST request:", e)
 
-def pepe(ch, method, properties, body):
+def on_message_received(ch, method, properties, body):
     data = json.loads(body)
     print(f"Tarea recibida")
     '''
@@ -97,36 +98,33 @@ def connect_keep_alive_server():
     threading.Thread(target=send_keep_alive, daemon=True).start()
     
 
-def on_message_received(ch, method, properties, body):
-    print(f"Mensaje recibido: {body}")
-    # Procesa el mensaje aquí
-    ch.basic_ack(delivery_tag=method.delivery_tag)
-
 def main():
+    global connection
+    
     while True:
         print("Ciclo while")
         print()
         try:
-            connection = pika.BlockingConnection(
-                pika.ConnectionParameters(
-                    host=RABBITMQ_HOST, 
-                    port=RABBITMQ_PORT, 
-                    credentials=pika.PlainCredentials(f'{RABBITMQ_USER}', f'{RABBITMQ_PASSWORD}'), 
-                    heartbeat=0
+            if connection is None or not connection.is_open:
+                connection = pika.BlockingConnection(
+                    pika.ConnectionParameters(
+                        host=RABBITMQ_HOST, 
+                        port=RABBITMQ_PORT, 
+                        credentials=pika.PlainCredentials(f'{RABBITMQ_USER}', f'{RABBITMQ_PASSWORD}'), 
+                        heartbeat=0
+                    )
                 )
-            )
-            channel = connection.channel()
-            channel.exchange_declare(exchange='blockchain_challenge', exchange_type='topic', durable=True)
-            result = channel.queue_declare('', exclusive=True)
-            queue_name = result.method.queue
-            #routing_key = f'{id}' if ES_WORKER_POOL else 'tasks'
-            routing_key = 'tasks'
-            channel.queue_bind(exchange='blockchain_challenge', queue=queue_name, routing_key=routing_key)
-            print(f"Bindeando queue con Routing key: {routing_key}")
-            channel.basic_consume(queue=queue_name, on_message_callback=on_message_received, auto_ack=False)
-            print("PASÉ BASIC CONSUME")
-            channel.start_consuming()
-            print("Conectado a RabbitMQ. Esperando mensajes...")
+                channel = connection.channel()
+                channel.exchange_declare(exchange='blockchain_challenge', exchange_type='topic', durable=True)
+                result = channel.queue_declare('', exclusive=True)
+                queue_name = result.method.queue
+                #routing_key = f'{id}' if ES_WORKER_POOL else 'tasks'
+                routing_key = 'tasks'
+                channel.queue_bind(exchange='blockchain_challenge', queue=queue_name, routing_key=routing_key)
+                print(f"Bindeando queue con Routing key: {routing_key}")
+                channel.basic_consume(queue=queue_name, on_message_callback=on_message_received, auto_ack=False)
+                print("PASÉ BASIC CONSUME")
+                channel.start_consuming()
 
         except KeyboardInterrupt:
             print("Consumption stopped by user.")

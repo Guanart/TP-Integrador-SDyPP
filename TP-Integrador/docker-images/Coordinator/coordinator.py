@@ -170,15 +170,15 @@ def task_building():
                 # Obtengo la diferencia de tiempo
                 time_difference = (datetime.now(timezone.utc) - time_challenge_initiate).total_seconds()
                 # Si pasaron 5 minutos y todavía nadie respondio, se disminuye el prefijo
-                if time_difference >= 300 and len(prefix) > 1:
-                    prefix = prefix[:-1]  # Quitar un "0"
-                    redis_utils.set_var("prefix", prefix) # Guardar en Redis el prefijo
-                    print(f"Ningún worker resolvió la tarea en 5 minutos, disminuyendo dificultad: {prefix}")
-                    print()
-                    last_task["prefix"] = prefix
-                    redis_utils.set_var("last_task", last_task) # Guardar en Redis la ultima tarea
-                    # Se repostea la misma tarea que nadie pudo responder, pero con un prefijo menos
-                    repostear_task()
+                if time_difference >= 300:
+                    if len(prefix) > 1:
+                        prefix = prefix[:-1]  # Quitar un "0"
+                        redis_utils.set_var("prefix", prefix) # Guardar en Redis el prefijo
+                        print(f"Ningún worker resolvió la tarea en 5 minutos, disminuyendo dificultad: {prefix}")
+                        print()
+                        last_task["prefix"] = prefix
+                        redis_utils.set_var("last_task", last_task) # Guardar en Redis la ultima tarea
+                repostear_task()
                 time.sleep(30)
                 continue # Vuelvo a ejecutar el bucle, sin pasar por postear_task
             
@@ -216,6 +216,12 @@ def solved_task():
         prefijo = redis_utils.get_task(block_id)["prefix"]
         if not received_hash.startswith(prefijo):
             return jsonify({'error': 'El hash no tiene el prefijo requerido.'}), 400
+        # Comparar el numero con el rango permitido
+        min = redis_utils.get_task(block_id)["num_min"]
+        max = redis_utils.get_task(block_id)["num_max"]
+        number = data.get("number")
+        if number < min or number > max:
+            return jsonify({'error': 'El nonce no está en el rango permitido.'}), 400
         # Invocar a la sección crítica (para agregar el bloque a la blockchain)
         respuesta, codigo_estado = seccion_critica(data)
         return respuesta, codigo_estado
