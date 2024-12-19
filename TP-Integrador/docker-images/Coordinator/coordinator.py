@@ -219,8 +219,8 @@ def solved_task():
         # Comparar el numero con el rango permitido
         min = redis_utils.get_task(block_id)["num_min"]
         max = redis_utils.get_task(block_id)["num_max"]
-        number = data.get("number")
-        if number < min or number > max:
+        nonce = int(data.get("number"))
+        if nonce < int(min) or nonce > int(max):
             return jsonify({'error': 'El nonce no está en el rango permitido.'}), 400
         # Invocar a la sección crítica (para agregar el bloque a la blockchain)
         respuesta, codigo_estado = seccion_critica(data)

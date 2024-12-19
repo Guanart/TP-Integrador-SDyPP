@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: coordinator
-          image: grupo4sdypp2024/tp-integrador-coordinator:1.1.3
+          image: grupo4sdypp2024/tp-integrador-coordinator:1.1.4
           ports:
             - containerPort: 5000
           livenessProbe:
