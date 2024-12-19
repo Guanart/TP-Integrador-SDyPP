@@ -74,62 +74,77 @@ def postear_task(last_element):
     global last_id
     global last_task
     global time_challenge_initiate
-
-    # Obtener las transacciones de la cola de RabbitMQ
-    transactions = []
+    
     while True:
-        method_frame, header_frame, body = channel.basic_get(queue='transactions', auto_ack=False)
-        if method_frame:
-            # Agregar la transacción al array de transacciones
-            transactions.append(json.loads(body))
-            print("Transaccion recibida de la cola de RabbitMQ")
-            # Enviar ACK del mensaje recibido
-            channel.basic_ack(delivery_tag=method_frame.delivery_tag)
-        else:
-            print()
-            break  # No hay más mensajes para recibir
-        
-    if transactions:
-        # Crear la tarea
-        task = {
-            "id": last_id,
-            "transactions": transactions, 
-            "prefix": prefix,
-            "num_min": 0,
-            "num_max": 99999999,
-            "last_hash": last_element["hash"] if last_element else ""
-        }
-        # Guardar en Redis la tarea (para conocer la ulima tarea posteada):
-        redis_utils.post_task(last_id, task)   
-        last_task = task
-        redis_utils.set_var("last_task", last_task) # Guardar en Redis la ultima tarea
-        # Postear la tarea en el topic de RabbitMQ
-        print("Se va a publicar una tarea para los workers")
-        print()
-        channel.basic_publish(exchange='blockchain_challenge', routing_key='tasks', body=json.dumps(task))
-        print(f"Encolando tarea para los workers. Descripcion de la tarea: {task}")
-        print()
-        # Iniciar el timer
-        time_challenge_initiate = datetime.now(timezone.utc)
-        redis_utils.set_var("time_challenge_initiate", time_challenge_initiate.isoformat()) # Guardar en Redis el tiempo de inicio
-    else:
-        print(f"No hay transacciones por el momento.")
-        print()
+        try:
+            # Obtener las transacciones de la cola de RabbitMQ
+            transactions = []
+            while True:
+                method_frame, header_frame, body = channel.basic_get(queue='transactions', auto_ack=False)
+                if method_frame:
+                    # Agregar la transacción al array de transacciones
+                    transactions.append(json.loads(body))
+                    print("Transaccion recibida de la cola de RabbitMQ")
+                    # Enviar ACK del mensaje recibido
+                    channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+                else:
+                    print()
+                    break  # No hay más mensajes para recibir
+                
+            if transactions:
+                # Crear la tarea
+                task = {
+                    "id": last_id,
+                    "transactions": transactions, 
+                    "prefix": prefix,
+                    "num_min": 0,
+                    "num_max": 99999999,
+                    "last_hash": last_element["hash"] if last_element else ""
+                }
+                # Guardar en Redis la tarea (para conocer la ulima tarea posteada):
+                redis_utils.post_task(last_id, task)   
+                last_task = task
+                redis_utils.set_var("last_task", last_task) # Guardar en Redis la ultima tarea
+                # Postear la tarea en el topic de RabbitMQ
+                print("Se va a publicar una tarea para los workers")
+                print()
+                channel.basic_publish(exchange='blockchain_challenge', routing_key='tasks', body=json.dumps(task))
+                print(f"Encolando tarea para los workers. Descripcion de la tarea: {task}")
+                print()
+                # Iniciar el timer
+                time_challenge_initiate = datetime.now(timezone.utc)
+                redis_utils.set_var("time_challenge_initiate", time_challenge_initiate.isoformat()) # Guardar en Redis el tiempo de inicio
+            else:
+                print(f"No hay transacciones por el momento.")
+                print()
+            break
+        except Exception as e:
+            print(f"Error: {e}")
+            connect_redis()
+            connect_rabbitmq()
+
 
 # FUNCIÓN PARA REPOSTEAR UNA TAREA PARA LOS WORKERS 
 # (CUANDO PASA UN TIEMPO Y NINGUN WORKER PUBLICÓ UNA SOLUCIÓN)
 def repostear_task():
     global last_task
     global time_challenge_initiate
-
-    # Guardar en Redis la tarea:
-    redis_utils.post_task(last_id, last_task)   
-    # Postear la tarea en el topic de RabbitMQ
-    channel.basic_publish(exchange='blockchain_challenge', routing_key='tasks', body=json.dumps(last_task))
-    print(f"Encolando tarea para los workers. Descripcion de la tarea: {last_task}")
-    print()
-    # Iniciar el timer
-    time_challenge_initiate = datetime.now(timezone.utc)
+    
+    while True:
+        try:
+            # Guardar en Redis la tarea:
+            redis_utils.post_task(last_id, last_task)   
+            # Postear la tarea en el topic de RabbitMQ
+            channel.basic_publish(exchange='blockchain_challenge', routing_key='tasks', body=json.dumps(last_task))
+            print(f"Encolando tarea para los workers. Descripcion de la tarea: {last_task}")
+            print()
+            # Iniciar el timer
+            time_challenge_initiate = datetime.now(timezone.utc)
+            break
+        except Exception as e:
+            print(f"Error: {e}")
+            connect_redis()
+            connect_rabbitmq()
 
 # FUNCIÓN CICLO PARA GENERAR TAREAS
 def task_building():
@@ -140,35 +155,40 @@ def task_building():
     global last_id
 
     # Comprobar estar conectado Redis y RabbitMQ
-    while connect_redis() and connect_rabbitmq():
-        print("Comprobando si hay transacciones para generar task...")
-        print()
-        # Obtener último bloque de la blockchain
-        last_element = redis_utils.get_latest_element() 
-        # Aumentar el last_id con respecto al ID del ultimo bloque de la blockchain
-        last_id = last_element["id"] + 1 if last_element else 0
-        redis_utils.set_var("last_id", last_id) # Guardar en Redis el last_id
+    while True:
+        try:
+            print("Comprobando si hay transacciones para generar task...")
+            print()
+            # Obtener último bloque de la blockchain
+            last_element = redis_utils.get_latest_element() 
+            # Aumentar el last_id con respecto al ID del ultimo bloque de la blockchain
+            last_id = last_element["id"] + 1 if last_element else 0
+            redis_utils.set_var("last_id", last_id) # Guardar en Redis el last_id
 
-        # Si la ultima tarea que se publicó es igual al ultimo id, significa que ningun worker ha publicado la solución
-        if last_task != None and last_task['id'] == last_id:
-            # Obtengo la diferencia de tiempo
-            time_difference = (datetime.now(timezone.utc) - time_challenge_initiate).total_seconds()
-            # Si pasaron 5 minutos y todavía nadie respondio, se disminuye el prefijo
-            if time_difference >= 300 and len(prefix) > 1:
-                prefix = prefix[:-1]  # Quitar un "0"
-                redis_utils.set_var("prefix", prefix) # Guardar en Redis el prefijo
-                print(f"Ningún worker resolvió la tarea en 5 minutos, disminuyendo dificultad: {prefix}")
-                print()
-                last_task["prefix"] = prefix
-                redis_utils.set_var("last_task", last_task) # Guardar en Redis la ultima tarea
-                # Se repostea la misma tarea que nadie pudo responder, pero con un prefijo menos
-                repostear_task()
-            time.sleep(30)
-            continue # Vuelvo a ejecutar el bucle, sin pasar por postear_task
-        
-        # Llamar a la función para postear tarea
-        postear_task(last_element)                
-        time.sleep(30)  # Cambiar a 60
+            # Si la ultima tarea que se publicó es igual al ultimo id, significa que ningun worker ha publicado la solución
+            if last_task != None and last_task['id'] == last_id:
+                # Obtengo la diferencia de tiempo
+                time_difference = (datetime.now(timezone.utc) - time_challenge_initiate).total_seconds()
+                # Si pasaron 5 minutos y todavía nadie respondio, se disminuye el prefijo
+                if time_difference >= 300 and len(prefix) > 1:
+                    prefix = prefix[:-1]  # Quitar un "0"
+                    redis_utils.set_var("prefix", prefix) # Guardar en Redis el prefijo
+                    print(f"Ningún worker resolvió la tarea en 5 minutos, disminuyendo dificultad: {prefix}")
+                    print()
+                    last_task["prefix"] = prefix
+                    redis_utils.set_var("last_task", last_task) # Guardar en Redis la ultima tarea
+                    # Se repostea la misma tarea que nadie pudo responder, pero con un prefijo menos
+                    repostear_task()
+                time.sleep(30)
+                continue # Vuelvo a ejecutar el bucle, sin pasar por postear_task
+            
+            # Llamar a la función para postear tarea
+            postear_task(last_element)                
+            time.sleep(30) 
+        except Exception as e:
+            print(f"Error: {e}")
+            connect_redis()
+            connect_rabbitmq()
 
 # ENDPOINT PARA RECIBIR SOLUCIONES DE LOS WORKERS
 @app.route("/solved_task", methods=["POST"])
