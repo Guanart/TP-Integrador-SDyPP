@@ -264,12 +264,12 @@ def connect_redis():
             redis_utils = RedisUtils(redis_client)
             print("Conectado a Redis")
             print()
-            return True
         except Exception as e:
             print(f"No se pudo conectar a Redis: {e}")
             print("Reintentando en 5 segundos...")
             print()
             time.sleep(5)
+    return True
 
 # FUNCIÓN PARA CONECTAR CON RABBITMQ
 def connect_rabbitmq():
@@ -291,12 +291,12 @@ def connect_rabbitmq():
             channel.exchange_declare(exchange=rabbitmq_exchange, exchange_type='topic', durable=True)
             print("Conectado a RabbitMQ!")
             print()
-            return True
         except Exception as e:
             print(f"Error al conectar con RabbitMQ: {e}")
             print("Reintentando en 5 segundos...")
             print()
             time.sleep(5)
+    return True
 
 # INICIO DE LA APLICACIÓN
 if __name__ == "__main__":
