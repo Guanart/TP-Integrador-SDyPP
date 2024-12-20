@@ -106,6 +106,7 @@ def on_message_received(ch, method, properties, body):
 """
 def main():
     global connection
+    global id
 
     while True:
         print("Ciclo while")
@@ -117,7 +118,7 @@ def main():
                         host=RABBITMQ_HOST, 
                         port=RABBITMQ_PORT, 
                         credentials=pika.PlainCredentials(f'{RABBITMQ_USER}', f'{RABBITMQ_PASSWORD}'), 
-                        heartbeat=0
+                        heartbeat=3600
                     )
                 )
                 channel = connection.channel()
@@ -125,7 +126,9 @@ def main():
                 result = channel.queue_declare('', exclusive=True)
                 queue_name = result.method.queue
                 #routing_key = f'{id}' if ES_WORKER_POOL else 'tasks'
-                routing_key = 'tasks'
+                while id == -1:
+                    time.sleep(3)
+                routing_key = f'{id}'
                 channel.queue_bind(exchange='blockchain_challenge', queue=queue_name, routing_key=routing_key)
                 print(f"Bindeando queue con Routing key: {routing_key}")
                 channel.basic_consume(queue=queue_name, on_message_callback=on_message_received, auto_ack=False)

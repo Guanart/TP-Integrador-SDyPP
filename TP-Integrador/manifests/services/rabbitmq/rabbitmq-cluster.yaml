@@ -18,13 +18,13 @@ spec:
   # persistence:
   #   storageClassName: standard
   #   storage: 1Gi
-  # resources:
-  #   requests:
-  #     cpu: 500m
-  #     memory: 2Gi
-  #   limits:
-  #     cpu: 500m
-  #     memory: 2Gi
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2Gi
+    limits:
+      cpu: 500m
+      memory: 2Gi
   # rabbitmq:
   #   additionalConfig: |
   #     heartbeat = 3600
