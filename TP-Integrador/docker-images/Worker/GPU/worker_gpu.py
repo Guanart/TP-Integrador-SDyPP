@@ -54,7 +54,8 @@ def on_message_received(ch, method, properties, body):
         print(f"Resultado encontrado y posteado para el block con ID {data['id']} en {processing_time:.2f} segundos")
         ch.basic_ack(delivery_tag=method.delivery_tag)
     else:
-        print(f"No se encontró un Hash con ese máximo de números")
+        print()
+        #print(f"No se encontró un Hash con ese máximo de números")
         ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)  # Le indico que no pude, y que no reencole
 
 def send_keep_alive():
@@ -97,10 +98,15 @@ def connect_keep_alive_server():
             print("Failed to send POST request:", e)
     threading.Thread(target=send_keep_alive, daemon=True).start()
     
-
+"""
+def on_message_received(ch, method, properties, body):
+    print(f"Mensaje recibido de RABBITMQ: {json.loads(body)}")
+    print("Haciendo como que proceso....")
+    ch.basic_ack(delivery_tag=method.delivery_tag)
+"""
 def main():
     global connection
-    
+
     while True:
         print("Ciclo while")
         print()
