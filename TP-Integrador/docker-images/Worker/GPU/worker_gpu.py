@@ -58,6 +58,13 @@ def on_message_received(ch, method, properties, body):
         #print(f"No se encontró un Hash con ese máximo de números")
         ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)  # Le indico que no pude, y que no reencole
 
+"""
+def on_message_received(ch, method, properties, body):
+    print(f"Mensaje recibido de RABBITMQ: {json.loads(body)}")
+    print("Haciendo como que proceso....")
+    ch.basic_ack(delivery_tag=method.delivery_tag)
+"""
+
 def send_keep_alive():
     global id
     url = f"http://{KEEPALIVE_HOST}:{KEEPALIVE_PORT}/alive"
@@ -98,12 +105,7 @@ def connect_keep_alive_server():
             print("Failed to send POST request:", e)
     threading.Thread(target=send_keep_alive, daemon=True).start()
     
-"""
-def on_message_received(ch, method, properties, body):
-    print(f"Mensaje recibido de RABBITMQ: {json.loads(body)}")
-    print("Haciendo como que proceso....")
-    ch.basic_ack(delivery_tag=method.delivery_tag)
-"""
+
 def main():
     global connection
     global id
