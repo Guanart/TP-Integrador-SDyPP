@@ -26,6 +26,7 @@ def post_result(data):
     except requests.exceptions.RequestException as e:
         print("Failed to send POST request:", e)
 
+
 def on_message_received(ch, method, properties, body):
     data = json.loads(body)
     print(f"Tarea recibida")
